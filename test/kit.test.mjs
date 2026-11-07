@@ -157,3 +157,13 @@ test('HTML report: domain page with fit table and concept sections', async () =>
   assert.match(fs.readFileSync(path.join(out, 'index.html'), 'utf8'), /83 %/);
   assert.match(fs.readFileSync(path.join(out, 'sources/leg.html'), 'utf8'), /line 18/);
 });
+
+test('code quotes keep angle brackets and markup characters', async () => {
+  const dir = tmp();
+  fs.cpSync(EXAMPLE, dir, { recursive: true });
+  fs.appendFileSync(path.join(dir, 'legacy/loan.php'), "\n$label = $days < 3 ? '<b>soon</b>' : '*late*';\n");
+  const file = path.join(dir, 'requirements/01-loans.yml');
+  fs.writeFileSync(file, fs.readFileSync(file, 'utf8').replace('quote: "return $days * FEE_PER_DAY;"', `quote: "$label = $days < 3 ? '<b>soon</b>' : '*late*';"`));
+  const { errors } = checkCatalog(await loadConfig(dir));
+  assert.deepEqual(errors, []);
+});

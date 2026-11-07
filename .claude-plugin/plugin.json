@@ -1,7 +1,7 @@
 {
   "name": "validation-kit",
   "description": "Validate a system rebuild or upgrade against the legacy system: requirements catalogue with verbatim quotes, behaviour inventory, Playwright flow tests, rule tests and a traceable report (HTML or FriendlyBase). Skill /validation-kit:validation.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": { "name": "Adiwidjaja Teamworks GmbH" },
   "license": "BSD-3-Clause"
 }

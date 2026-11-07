@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1 – 2026-11-08
+
+- Code quotes are matched with whitespace normalisation only; `<`, `*`, `_` in code no longer break the check
+
 ## 0.2.0 – 2026-11-07
 
 For rebuilds with a different model, where the legacy code is the source and

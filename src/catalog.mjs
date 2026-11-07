@@ -40,9 +40,9 @@ export function loadSources(cfg) {
 
 /** Line of the first line of `quote` in `text` (1-based), or undefined. */
 export function quoteLine(text, quote) {
-  const first = normalize(String(quote).split('\n').find((l) => l.trim()) ?? '');
+  const first = normalizeCode(String(quote).split('\n').find((l) => l.trim()) ?? '');
   if (!first) return undefined;
-  const i = text.split('\n').findIndex((l) => normalize(l).includes(first));
+  const i = text.split('\n').findIndex((l) => normalizeCode(l).includes(first));
   return i >= 0 ? i + 1 : undefined;
 }
 
@@ -85,6 +85,11 @@ export function normalize(text) {
     .replace(/ /g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+/** Normalises code for quote matching: only whitespace is unified. */
+export function normalizeCode(text) {
+  return String(text).replace(/\s+/g, ' ').trim();
 }
 
 /** A citation may name a paragraph ("11.300(b)") of an outline entry ("11.300"). */
@@ -152,7 +157,8 @@ export function checkCatalog(cfg, sources = loadSources(cfg), catalog = loadCata
         if (!(key in texts)) texts[key] = sourceText(cfg, doc, src.section);
         const text = texts[key];
         if (text == null) { warnings.push(`${where}: ${t.checkNoSourceText(src.doc)}`); continue; }
-        if (!normalize(text).includes(normalize(src.quote))) errors.push(`${where}: ${t.checkQuoteNotFound(src.doc, src.quote.slice(0, 80))}`);
+        const norm = doc.kind === 'code' ? normalizeCode : normalize;
+        if (!norm(text).includes(norm(src.quote))) errors.push(`${where}: ${t.checkQuoteNotFound(src.doc, src.quote.slice(0, 80))}`);
       }
     }
   }
