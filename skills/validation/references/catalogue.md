@@ -16,6 +16,37 @@
   sections: []                 # no outline: requirements cite it without section
 ```
 
+### Code as source
+
+When the legacy code is the only reliable source (no specification, or an
+outdated one), register the source tree:
+
+```yaml
+- id: DJ
+  title: Legacy application (Django)
+  kind: code
+  root: django_root              # relative to paths.sourceFiles
+  revision: 83ddf69              # commit the quotes refer to
+  url: https://github.com/org/repo/blob/{revision}/django_root/{file}#L{line}   # optional
+  exclude: [migrations/, tests/] # optional; extensions: [.py, .html] to narrow
+```
+
+Every file is a section. A citation names the file and quotes the code
+verbatim (one or more lines, YAML block scalar for several):
+
+```yaml
+    sources:
+      - doc: DJ
+        section: glasmacher/models/invoice.py
+        quote: |
+          if student.sibling:
+              rate = school.commission_sibling
+```
+
+`vkit check` checks the quote against that file; the report shows the line
+and links to it. The source page lists all files, so it shows which parts of
+the code no requirement covers yet.
+
 Text for the quote check, in this order: `sources/text/<id>.txt`, then `file`
 (.md/.txt read as is, .pdf via `pdftotext`, everything else via `pandoc`,
 cached in `.cache/sources/`). Without text, `vkit check` warns and skips the quote.
@@ -60,3 +91,8 @@ emphasis and soft hyphens), legacy status without evidence.
   where the source has them (“after 28 days”, “at most five”).
 - Traceable: at least one source; derived requirements cite the source they derive from.
 - Neutral to the implementation: no class names or screens of the new system.
+- When derived from code, state the business rule, not the code: “Siblings are
+  invoiced with the sibling commission rate”, not “invoice() reads commission_sibling”.
+
+Optional fields when the project has a domain model ([domain.md](domain.md)):
+`domain` (concepts), `variants` (default: all), `realisation` (core, config, extension).

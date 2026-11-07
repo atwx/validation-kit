@@ -6,12 +6,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { sectionOf } from '../catalog.mjs';
+import { domainVariants, variantsOf } from '../domain.mjs';
 import { esc, listFiles, makeDateFormatter, miniMarkdown as md, sha256, slug } from '../util.mjs';
 
 const STYLE = path.join(path.dirname(fileURLToPath(import.meta.url)), 'style.css');
 
 export function buildHtml(model, outDir = model.cfg.path('html')) {
-  const { cfg, sources, areas, requirements, byId, run, flows, rules, ruleRun, behaviour, coverage, ruleCoverage, isCovered, status, deviations, counts } = model;
+  const { cfg, sources, areas, requirements, byId, run, flows, rules, ruleRun, behaviour, coverage, ruleCoverage, isCovered, status, deviations, counts, domain, fit } = model;
   const { t } = cfg;
   const fmtDate = makeDateFormatter(cfg.locale, cfg.timeZone);
   const texts = cfg.texts;
@@ -42,8 +43,12 @@ export function buildHtml(model, outDir = model.cfg.path('html')) {
   const sourceRef = (src, depth) => {
     const doc = sources[src.doc];
     const sec = sectionOf(doc, src.section);
-    return `<a href="${depth}sources/${slug(doc.id)}.html${sec ? `#${sectionAnchor(sec.no)}` : ''}">${esc(doc.id)} ${esc(src.section ?? '')}</a>`;
+    return `<a href="${depth}sources/${slug(doc.id)}.html${sec ? `#${sectionAnchor(sec.no)}` : ''}">${esc(doc.id)} ${esc(src.section ?? '')}${src.line ? `:${src.line}` : ''}</a>`;
   };
+  const realisationPill = (r) => (r.realisation ? `<span class="pill pill-real-${slug(r.realisation)}" title="${esc(t.realisationHeader)}">${esc(t.realisation[r.realisation] ?? r.realisation)}</span>` : '');
+  const variantTitle = Object.fromEntries(domainVariants(cfg).map((v) => [v.id, v.title]));
+  const conceptLink = (ref, depth) => `<a class="req-chip concept-chip" href="${depth}domain.html#c-${slug(String(ref).split('.')[0])}">${esc(ref)}</a>`;
+  const quoteHtml = (s) => (sources[s.doc]?.kind === 'code' ? `<pre class="code-quote"><code>${esc(s.quote)}</code></pre>` : `<p>${esc(s.quote)}</p>`);
   const entryOf = (id) => behaviour?.byRef[id];
   const targetPill = (id) => {
     const e = entryOf(id);
@@ -61,6 +66,7 @@ export function buildHtml(model, outDir = model.cfg.path('html')) {
       ...(firstSource ? [[`sources/${slug(firstSource.id)}.html`, t.navSources, 'sources']] : []),
       ['matrix.html', t.navTraceability, 'matrix'],
       ...(rules.length ? [['tests/rules.html', t.ruleTests, 'rules']] : []),
+      ...(domain ? [['domain.html', t.navDomain, 'domain']] : []),
       ...(behaviour ? [['behaviour.html', t.navBehaviour, 'behaviour']] : []),
     ].map(([href, label, key]) => `<a href="${depth}${href}" class="${active === key ? 'active' : ''}">${esc(label)}</a>`).join('');
     return `<!doctype html>
@@ -133,9 +139,17 @@ ${body}
     <td>${r.risk ? riskPill(r.risk) : ''}</td>
     <td>${pill(status(r.id))}</td>
     <td>${legacyPill(r)}</td>
-    <td>${targetPill(r.id)}${(behaviour?.questionsOf(r.id) ?? []).map((q) => ' ' + questionLink(q, '')).join('')}</td>
+    <td>${realisationPill(r)} ${targetPill(r.id)}${(behaviour?.questionsOf(r.id) ?? []).map((q) => ' ' + questionLink(q, '')).join('')}</td>
   </tr>`).join('')}
   </tbody>`).join('');
+
+  const realisations = cfg.domain?.realisations ?? [];
+  const fitTable = fit.length ? `<h2>${esc(t.fitTitle)}</h2>
+<p>${esc(t.fitLead)} <a href="domain.html">${esc(t.domainTitle)}</a></p>
+<table class="list">
+  <thead><tr><th>${esc(t.variant)}</th><th class="num">${esc(t.requirements)}</th>${realisations.map((x) => `<th class="num">${esc(t.realisation[x] ?? x)}</th>`).join('')}<th class="num">${esc(t.withoutRealisation)}</th><th class="num">${esc(t.shared)}</th></tr></thead>
+  <tbody>${fit.map((x) => `<tr><td>${esc(x.variant.title)}</td><td class="num">${x.total}</td>${realisations.map((r) => `<td class="num">${x.by[r] || ''}</td>`).join('')}<td class="num">${x.open || ''}</td><td class="num"><strong>${x.share === null ? '–' : `${Math.round(x.share * 100)} %`}</strong></td></tr>`).join('')}</tbody>
+</table>` : '';
 
   write('index.html', layout({
     title: t.navOverview, depth: '', active: 'index', body: `
@@ -152,6 +166,8 @@ ${texts.intro ? `<div class="intro">${texts.intro}</div>` : ''}
   <div class="card"><div class="big">${counts.untested}</div>${esc(t.cardUntested)}</div>
   ${hasLegacy ? `<div class="card legacy"><div class="big">${legacyNotMet}</div>${esc(t.cardLegacyNotMet)}${legacyPartial ? ` (+${legacyPartial} ${esc(t.legacy.partial)})` : ''}</div>` : ''}
 </section>
+
+${fitTable}
 
 <h2>${esc(t.systemState)}</h2>
 <table class="kv">
@@ -249,8 +265,8 @@ ${deviations.length ? `<table class="list">
       if (!doc) return '';
       const sec = sectionOf(doc, s.section);
       return `<blockquote class="quote">
-      <p>${esc(s.quote)}</p>
-      <cite>${sourceRef(s, '../')} ${esc(sec?.title ?? '')} · ${esc(doc.title)}${cfg.paraphraseTypes.includes(s.quote_type) ? ` · <em>${esc(t.paraphrase)}</em>` : ''}</cite>
+      ${quoteHtml(s)}
+      <cite>${sourceRef(s, '../')} ${esc(sec?.title ?? '')} · ${esc(doc.title)}${s.url ? ` · <a href="${esc(s.url)}">↗</a>` : ''}${cfg.paraphraseTypes.includes(s.quote_type) ? ` · <em>${esc(t.paraphrase)}</em>` : ''}</cite>
     </blockquote>`;
     }).join('');
     const stepHtml = steps.length ? `<table class="list">
@@ -272,10 +288,15 @@ ${deviations.length ? `<table class="list">
       title: r.id, depth: '../', body: `
 <p class="crumbs"><a href="../index.html#area-${slug(r.area)}">${esc(r.area)}</a></p>
 <h1><span class="id">${esc(r.id)}</span> ${esc(r.title)}</h1>
-<p>${r.risk ? riskPill(r.risk) : ''} ${pill(status(r.id))} ${legacyPill(r)} ${targetPill(r.id)}</p>
+<p>${r.risk ? riskPill(r.risk) : ''} ${pill(status(r.id))} ${legacyPill(r)} ${realisationPill(r)} ${targetPill(r.id)}</p>
 <h2>${esc(t.acceptance)}</h2>
 <p class="acceptance">${esc(r.acceptance)}</p>
 ${r.note ? `<div class="note"><strong>${esc(t.note)}:</strong> ${esc(r.note)}</div>` : ''}
+${domain || r.domain?.length || r.realisation ? `<table class="kv">
+  ${r.domain?.length ? `<tr><th>${esc(t.domainRefs)}</th><td>${r.domain.map((ref) => conceptLink(ref, '../')).join(' ')}</td></tr>` : ''}
+  ${fit.length ? `<tr><th>${esc(t.appliesTo)}</th><td>${r.variants?.length ? esc(r.variants.map((v) => variantTitle[v] ?? v).join(', ')) : esc(t.allVariants)}</td></tr>` : ''}
+  ${r.realisation ? `<tr><th>${esc(t.realisationHeader)}</th><td>${realisationPill(r)}</td></tr>` : ''}
+</table>` : ''}
 ${sourcesHtml ? `<h2>${esc(t.navSources)}</h2>\n${sourcesHtml}` : ''}
 ${r.legacy ? `<h2>${esc(t.legacySystem)}: ${esc(t.legacy[r.legacy.status])}</h2><ul>${(r.legacy.evidence ?? []).map((e) => `<li>${esc(e)}</li>`).join('')}</ul>` : ''}
 ${behaviourHtml(r.id)}
@@ -308,17 +329,18 @@ ${steps.length && ruleCoverage[r.id].length ? `<h3>${esc(t.flowTests)}</h3>` : '
       return `<tr id="${sectionAnchor(no)}" class="cov-${state}">
       <td class="secno" style="padding-left:${0.5 + depthLevel}em">${esc(no)}</td>
       <td><strong>${esc(title)}</strong>
-        ${refs.map(({ r, s }) => `<div class="cite">${reqLink(r.id, '../')} <span class="quote-inline">„${esc(s.quote)}“</span></div>`).join('')}</td>
+        ${refs.map(({ r, s }) => `<div class="cite">${reqLink(r.id, '../')} ${doc.kind === 'code' ? `${s.line ? `<span class="muted">${esc(t.line)} ${s.line}</span> ` : ''}<code class="quote-inline">${esc(s.quote)}</code>` : `<span class="quote-inline">„${esc(s.quote)}“</span>`}</div>`).join('')}</td>
       <td><span class="cov cov-${state}">${esc(t.coverage[state])}</span></td>
     </tr>`;
     };
-    const rows = doc.sections.map((sec) => rowFor(sec.no, sec.title, bySection.get(sec.no), String(sec.no).split('.').length - 1)).join('')
+    const level = (no) => (doc.kind === 'code' ? 0 : String(no).split('.').length - 1);
+    const rows = doc.sections.map((sec) => rowFor(sec.no, sec.title, bySection.get(sec.no), level(sec.no))).join('')
       + (unsectioned.length ? rowFor('–', t.withoutSection, unsectioned, 0) : '');
     write(`sources/${slug(doc.id)}.html`, layout({
       title: doc.title, depth: '../', active: 'sources', body: `
 <p class="crumbs">${esc(t.navSources)}: ${sourceNav}</p>
 <h1>${esc(doc.title)}</h1>
-<p class="lead">${doc.file ? `${esc(t.file)} <code>${esc(doc.file)}</code>${doc.revision ? `, ${esc(t.revision)} ${esc(doc.revision)}` : ''}. ` : ''}${doc.url ? `<a href="${esc(doc.url)}">${esc(doc.url)}</a>. ` : ''}
+<p class="lead">${doc.kind === 'code' ? `${esc(t.codeTree)} <code>${esc(doc.root ?? '.')}</code>${doc.revision ? `, ${esc(t.revision)} ${esc(doc.revision)}` : ''}. ` : ''}${doc.file ? `${esc(t.file)} <code>${esc(doc.file)}</code>${doc.revision ? `, ${esc(t.revision)} ${esc(doc.revision)}` : ''}. ` : ''}${doc.url ? `<a href="${esc(doc.url)}">${esc(doc.url)}</a>. ` : ''}
 ${esc(t.sourceCoverage(withReq, doc.sections.length || 1, withTest))}</p>
 <table class="list sections">
   <thead><tr><th>${esc(t.section)}</th><th>${esc(t.sectionHeader)}</th><th>${esc(t.coverageHeader)}</th></tr></thead>
@@ -451,6 +473,49 @@ ${texts[`target_${optValue(o)}`] ? `<p>${texts[`target_${optValue(o)}`]}</p>` : 
     }));
   }
 
+  // ------------------------------------------------------------ domain model
+
+  if (domain) {
+    const variants = domainVariants(cfg);
+    // Short Markdown without paragraphs, for table cells
+    const inl = (text) => md(text ?? '').replace(/^<p>|<\/p>$/g, '').replace(/<\/p><p>/g, '<br>');
+    const memberRows = (list, head) => {
+      if (!list.length) return '';
+      const vs = variants.filter((v) => list.some((m) => m.variants?.[v.id]));
+      const withType = list.some((m) => m.type);
+      const withNote = list.some((m) => m.note);
+      return `<h4>${esc(head)}</h4><table class="list small">
+      <thead><tr><th>${esc(t.name)}</th><th>${esc(t.title)}</th>${withType ? `<th>${esc(t.type)}</th>` : ''}${vs.map((v) => `<th>${esc(v.title)}</th>`).join('')}${withNote ? `<th>${esc(t.note)}</th>` : ''}</tr></thead>
+      <tbody>${list.map((m) => `<tr><td><code>${esc(m.name)}</code></td><td>${esc(m.title ?? '')}</td>${withType ? `<td>${esc(m.type ?? '')}</td>` : ''}${vs.map((v) => `<td>${m.variants?.[v.id] ? `<code>${esc(m.variants[v.id])}</code>` : '<span class="muted">–</span>'}</td>`).join('')}${withNote ? `<td>${inl(m.note)}</td>` : ''}</tr>`).join('')}</tbody></table>`;
+    };
+    const conceptHtml = (c) => {
+      const refs = model.requirementsByConcept[c.id] ?? [];
+      return `<section class="concept" id="c-${slug(c.id)}">
+  <h3>${c.title && c.title !== c.id ? `<span class="id">${esc(c.id)}</span> ${esc(c.title)}` : esc(c.id)} ${c.kind ? `<span class="muted small">${esc(c.kind)}</span>` : ''} ${c.scope ? realisationPill({ realisation: c.scope }) : ''}</h3>
+  ${md(c.description ?? '')}
+  ${Object.keys(c.variants).length ? `<table class="kv">${variants.filter((v) => c.variants[v.id]).map((v) => `<tr><th>${esc(t.todayIn(v.title))}</th><td>${inl(c.variants[v.id])}</td></tr>`).join('')}</table>` : ''}
+  ${c.relations.length ? `<p><strong>${esc(t.relations)}:</strong> ${c.relations.map((r) => `${esc(r.kind ?? '')} ${conceptLink(r.to, '')}${r.note ? ` <span class="muted">(${esc(r.note)})</span>` : ''}`).join(' · ')}</p>` : ''}
+  ${memberRows(c.attributes, t.attributes)}
+  ${memberRows(c.states, t.states)}
+  <h4>${esc(t.requirements)}</h4>
+  ${refs.length ? `<ul class="refs">${refs.map(({ req, ref }) => `<li>${reqLink(req.id, '')} ${esc(req.title)} ${ref !== c.id ? `<span class="muted">(${esc(ref)})</span>` : ''} ${realisationPill(req)}</li>`).join('')}</ul>` : `<p class="muted">${esc(t.noRequirementForConcept)}</p>`}
+</section>`;
+    };
+    write('domain.html', layout({
+      title: t.domainTitle, depth: '', active: 'domain', body: `
+<h1>${esc(t.domainTitle)}</h1>
+<p class="lead">${esc(t.domainLead(domain.concepts.length, domain.groups.length))}</p>
+${texts.domainIntro ? `<div class="intro">${texts.domainIntro}</div>` : ''}
+${fitTable.replace(` <a href="domain.html">${esc(t.domainTitle)}</a>`, '')}
+<p class="crumbs" style="margin-top:1.5em">${domain.groups.map((g) => `<a href="#g-${slug(g.group ?? g.file)}">${esc(g.group ?? g.file)}</a>`).join(' · ')}</p>
+${domain.groups.map((g) => `<h2 id="g-${slug(g.group ?? g.file)}">${esc(g.group ?? g.file)}</h2>
+${g.description ? md(g.description) : ''}
+<p class="small muted">${esc(t.concept)}: ${g.concepts.map((c) => conceptLink(c.id, '')).join(' ')}</p>
+${g.concepts.map(conceptHtml).join('\n')}`).join('\n')}
+<p class="small muted">${esc(t.sourceFile)}: <code>${esc(path.relative(cfg.root, domain.dir))}</code></p>`,
+    }));
+  }
+
   // ------------------------------------------------------------ traceability matrix
 
   const matrixRules = rules.filter((r) => r.reqs.length);
@@ -468,12 +533,13 @@ ${texts[`target_${optValue(o)}`] ? `<p>${texts[`target_${optValue(o)}`]}</p>` : 
 <p><a href="matrix.csv">${esc(t.downloadCsv)}</a></p>`,
   }));
   const csvRow = (cells) => cells.map((v) => `"${String(v ?? '').replace(/"/g, '""')}"`).join(';');
-  const csv = [t.csvHead.join(';'),
+  const csv = [[...t.csvHead, ...(domain ? [t.domainRefs, t.appliesTo, t.realisationHeader] : [])].join(';'),
     ...requirements.map((r) => csvRow([r.id, r.title, r.area, r.risk, t.status[status(r.id)], r.legacy ? t.legacy[r.legacy.status] : '',
       coverage[r.id].map(({ flow, step }) => `${flow.plain ? flow.id : step.nr}${step.fulfilled ? '' : ` (${step.deviation})`}`).join(', '),
       ruleCoverage[r.id].map((rule) => `${rule.nr}${rule.fulfilled ? '' : ` (${rule.deviation})`}`).join(', '),
       entryOf(r.id) ? behaviour.labels[f.target]?.[entryOf(r.id).fm[f.target]] ?? '' : '',
-      (behaviour?.questionsOf(r.id) ?? []).map((q) => q.fm.ref ?? q.fm.id).join(', ')]))].join('\n');
+      (behaviour?.questionsOf(r.id) ?? []).map((q) => q.fm.ref ?? q.fm.id).join(', '),
+      ...(domain ? [(r.domain ?? []).join(', '), fit.length ? variantsOf(cfg, r).join(', ') : '', r.realisation ? t.realisation[r.realisation] ?? r.realisation : ''] : [])]))].join('\n');
   fs.writeFileSync(path.join(outDir, 'matrix.csv'), `﻿${csv}\n`);
 
   // ------------------------------------------------------------ assets and manifest

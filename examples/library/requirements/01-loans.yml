@@ -9,6 +9,11 @@ requirements:
       - doc: PROC
         section: "2.1"
         quote: "A member may borrow at most five media at the same time."
+      - doc: LEG
+        section: loan.php
+        quote: "if (count($member->openLoans()) >= MAX_OPEN_LOANS) {"
+    domain: [Loan, Member]
+    realisation: config
     acceptance: >
       A sixth loan for a member with five open loans is refused with a message.
     legacy:
@@ -20,12 +25,19 @@ requirements:
       - doc: PROC
         section: "2.1"
         quote: "A loan can be extended twice, unless another member has reserved the medium."
+      - doc: LEG
+        section: loan.php
+        quote: |
+          // Reservations are not checked here
+          if ($loan->extensions >= 2) {
+    domain: [Loan.extensions, Reservation]
+    realisation: core
     acceptance: >
       The third extension is refused; an extension of a reserved medium is refused.
     legacy:
       status: partial
       evidence:
-        - "Code: extend() checks the number of extensions but not the reservations (legacy/loan.php:212)."
+        - "Code: extend() checks the number of extensions but not the reservations (legacy/loan.php:18)."
   - id: LN-003
     title: Late fee capped at 10 EUR
     risk: medium
@@ -33,6 +45,12 @@ requirements:
       - doc: PROC
         section: "2.2"
         quote: "The fee is capped at 10 EUR per medium."
+      - doc: LEG
+        section: loan.php
+        quote: "return $days * FEE_PER_DAY;"
+    domain: [Fee]
+    variants: [city]
+    realisation: config
     acceptance: >
       A medium returned 30 days late costs 10.00 EUR, not 15.00 EUR.
     legacy:

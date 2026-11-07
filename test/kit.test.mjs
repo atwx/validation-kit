@@ -6,8 +6,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  buildFriendlyBase, buildHtml, buildModel, checkCatalog, junitToRuleTests, loadBehaviour, loadConfig, normalize,
-  resolveConfig, validateBehaviour,
+  buildFriendlyBase, buildHtml, buildModel, checkCatalog, checkDomain, domainFit, junitToRuleTests, loadBehaviour, loadCatalog,
+  loadConfig, loadDomain, normalize, resolveConfig, validateBehaviour,
 } from '../src/index.mjs';
 
 const EXAMPLE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../examples/library');
@@ -113,4 +113,47 @@ test('German labels', async () => {
 
 test('normalize ignores Markdown emphasis, dashes and soft hyphens', () => {
   assert.equal(normalize('A **member** may­ borrow – at most'), normalize('A member may borrow - at most'));
+});
+
+test('code source: files are sections, quotes are checked per file and located by line', async () => {
+  const cfg = await loadConfig(EXAMPLE);
+  const model = buildModel(cfg);
+  assert.deepEqual(model.sources.LEG.sections.map((s) => s.no), ['loan.php']);
+  const cite = model.byId['LN-002'].sources.find((s) => s.doc === 'LEG');
+  assert.equal(cite.line, 18);
+  assert.equal(cite.url, 'https://git.example.org/library/legacy/src/2.4.1/loan.php#L18');
+
+  const dir = tmp();
+  fs.cpSync(EXAMPLE, dir, { recursive: true });
+  const file = path.join(dir, 'requirements/01-loans.yml');
+  fs.writeFileSync(file, fs.readFileSync(file, 'utf8').replace('return $days * FEE_PER_DAY;', 'return min(10, $days * FEE_PER_DAY);').replace('section: loan.php\n        quote: "if', 'section: lend.php\n        quote: "if'));
+  const { errors } = checkCatalog(await loadConfig(dir));
+  assert.equal(errors.length, 2);
+  assert.match(errors[0], /LN-001: LEG has no section lend.php/);
+  assert.match(errors[1], /LN-003: quote not found verbatim in LEG/);
+});
+
+test('domain model: references, variants, realisation and fit per variant', async () => {
+  const cfg = await loadConfig(EXAMPLE);
+  const domain = loadDomain(cfg);
+  const { requirements } = loadCatalog(cfg);
+  assert.deepEqual(checkDomain(cfg, domain, requirements), { errors: [], warnings: [] });
+  assert.equal(domain.resolve('Loan.extensions').member.title, 'Extensions');
+  assert.equal(domain.resolve('Loan.open').member.title, 'open');
+  const fit = domainFit(cfg, requirements);
+  assert.deepEqual(fit.map((x) => [x.variant.id, x.total, x.shared, Math.round(x.share * 100)]), [['city', 6, 5, 83], ['campus', 4, 4, 100]]);
+
+  const broken = requirements.map((r) => (r.id === 'AC-001' ? { ...r, domain: ['Loan.colour'], variants: ['mobile'], realisation: 'magic' } : r));
+  const { errors } = checkDomain(cfg, domain, broken);
+  assert.deepEqual(errors, ['AC-001: Loan.colour is not in the domain model', 'AC-001: unknown variant mobile', 'AC-001: unknown realisation magic']);
+});
+
+test('HTML report: domain page with fit table and concept sections', async () => {
+  const out = tmp();
+  buildHtml(buildModel(await loadConfig(EXAMPLE)), out);
+  const page = fs.readFileSync(path.join(out, 'domain.html'), 'utf8');
+  assert.match(page, /id="c-loan"/);
+  assert.match(page, /City library<\/td><td class="num">6<\/td>/);
+  assert.match(fs.readFileSync(path.join(out, 'index.html'), 'utf8'), /83 %/);
+  assert.match(fs.readFileSync(path.join(out, 'sources/leg.html'), 'utf8'), /line 18/);
 });

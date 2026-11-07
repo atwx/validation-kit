@@ -9,6 +9,8 @@ requirements:
       - doc: PROC
         section: "4"
         quote: "Members can only see their own loans."
+    domain: [Member, Loan]
+    realisation: core
     acceptance: >
       A member who opens the loan list sees their own loans only, also when changing the member id in the URL.
   - id: AC-002
@@ -18,6 +20,8 @@ requirements:
       - doc: PROC
         section: "3"
         quote: "Three days before the due date the member receives a reminder by e-mail."
+    domain: [Loan.due_date]
+    realisation: config
     acceptance: >
       The nightly job sends one reminder per loan due in three days.
   - id: AC-003
@@ -27,5 +31,8 @@ requirements:
       - doc: INT
         quote_type: paraphrase
         quote: "The front desk looks up loans by the member's surname several times a day."
+    domain: [Member]
+    variants: [city]
+    realisation: extension
     acceptance: >
       The staff search finds loans by a part of the member's surname.

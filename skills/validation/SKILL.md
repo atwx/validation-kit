@@ -33,6 +33,17 @@ Before writing anything, find out and note in `validation/README.md`:
   require manual execution and signatures; then the flow tests are the
   rehearsal and the template for the manual protocol, not the evidence.
 
+Decide which of two situations applies:
+
+- **Same model, new technology** (upgrade, port): the rebuild keeps the legacy
+  behaviour, the same flow tests run against both systems. Follow the phases
+  below as written.
+- **Different model** (the rebuild may be operated and structured
+  differently, often to serve several customers or installations): the
+  business has to be covered, not the screens. Often the legacy code is the
+  only source. Add a domain model and follow
+  [references/domain.md](references/domain.md) in phases 1–4.
+
 Then: `npx -y github:atwx/validation-kit init validation --lang de` (or `en`), `cd validation && npm install`.
 
 ## 1. Sources
@@ -41,7 +52,8 @@ Register every source in `sources/sources.yml` with its outline (`sections`),
 so the report can show coverage per section. Make the text available for the
 quote check: `file` (docx/pdf/md, converted once) or `sources/text/<id>.txt`.
 Sources without text (interviews, workshops, observations) are listed too;
-requirements cite them with `quote_type: paraphrase`.
+requirements cite them with `quote_type: paraphrase`. The legacy code itself
+can be a source (`kind: code`, quotes checked per file).
 
 ## 2. Requirements catalogue
 

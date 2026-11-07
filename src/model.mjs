@@ -1,7 +1,8 @@
 // The data of a validation report: catalogue, sources, behaviour inventory,
 // flow and rule tests, numbered deviations and coverage per requirement.
 // Both report builders (HTML, FriendlyBase) render this model.
-import { loadCatalog, loadSources } from './catalog.mjs';
+import { codeUrl, loadCatalog, loadSources, quoteLine, sourceText } from './catalog.mjs';
+import { domainFit, loadDomain, requirementsByConcept } from './domain.mjs';
 import { loadBehaviour } from './behaviour.mjs';
 import { loadFlows, loadRuleTests } from './results.mjs';
 import { readJson, slug } from './util.mjs';
@@ -16,6 +17,18 @@ export function buildModel(cfg) {
   const flows = loadFlows(cfg.path('playwright'), { idPattern: cfg.idPattern });
   const ruleRun = loadRuleTests(cfg.path('rules'));
   const behaviour = loadBehaviour(cfg);
+  const domain = loadDomain(cfg);
+
+  // Citations of code: line of the quote in the file and a link to it
+  for (const r of requirements) {
+    for (const src of r.sources) {
+      const doc = sources[src.doc];
+      if (doc?.kind !== 'code' || !src.quote) continue;
+      const text = sourceText(cfg, doc, src.section);
+      src.line = text ? quoteLine(text, src.quote) : undefined;
+      src.url = codeUrl(doc, src.section, src.line);
+    }
+  }
   const n = cfg.numbering;
   const pad = (i, w) => String(i).padStart(w, '0');
 
@@ -74,6 +87,7 @@ export function buildModel(cfg) {
 
   return {
     cfg, sources, areas, requirements, byId, run, flows, ruleRun, rules, behaviour,
+    domain, fit: domain ? domainFit(cfg, requirements) : [], requirementsByConcept: requirementsByConcept(requirements),
     coverage, ruleCoverage, isCovered, status, deviations, counts,
     flowDeviationCount: flowDeviations, ruleDeviationCount: ruleDeviations,
   };

@@ -6,7 +6,12 @@ legacy system.
 
 - **Catalogue**: requirements in YAML, each with a verbatim quote from its source
   (checked against the source text), risk, acceptance criterion and the
-  evidenced behaviour of the legacy system.
+  evidenced behaviour of the legacy system. The legacy code itself can be the
+  source: quotes are checked per file and linked by line.
+- **Domain model** (optional): business concepts shared by several variants
+  (customers, installations), with the legacy mapping per variant; per
+  requirement the realisation (core, configuration, extension) and the fit of
+  the shared model per variant.
 - **Behaviour inventory**: for every requirement the target in the new system
   (keep, fix, add, open question, ordered change) and questions for the client.
 - **Tests**: Playwright flow tests in protocol form (step, procedure, expected and

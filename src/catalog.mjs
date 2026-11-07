@@ -4,16 +4,52 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import yaml from 'js-yaml';
+import { listFiles } from './util.mjs';
 
 export const LEGACY_STATES = ['not_met', 'partial', 'met'];
 
-/** Source documents by id. */
+// Code sources: files with these extensions count as sections unless the
+// source names its own `extensions`
+const CODE_EXTENSIONS = ['.py', '.php', '.js', '.mjs', '.ts', '.tsx', '.jsx', '.html', '.ss', '.twig', '.sql', '.yml', '.yaml', '.cs', '.java', '.rb', '.go'];
+
+/**
+ * Source documents by id. A source with `kind: code` is a source tree
+ * (`root`, relative to paths.sourceFiles): every file is a section, cited by
+ * its path, and quotes are checked against that file.
+ */
 export function loadSources(cfg) {
   const file = cfg.path('sources');
   if (!fs.existsSync(file)) return {};
   const list = yaml.load(fs.readFileSync(file, 'utf8')) ?? [];
-  for (const s of list) s.sections ??= [];
+  for (const s of list) {
+    s.sections ??= [];
+    if (s.kind === 'code') {
+      s.rootDir = path.resolve(cfg.path('sourceFiles'), s.root ?? '.');
+      if (!s.sections.length && fs.existsSync(s.rootDir)) {
+        const exts = s.extensions ?? CODE_EXTENSIONS;
+        const exclude = s.exclude ?? [];
+        s.sections = listFiles(s.rootDir)
+          .map((f) => path.relative(s.rootDir, f).split(path.sep).join('/'))
+          .filter((f) => exts.some((e) => f.endsWith(e)) && !exclude.some((x) => f.includes(x)))
+          .map((f) => ({ no: f, title: '' }));
+      }
+    }
+  }
   return Object.fromEntries(list.map((s) => [s.id, s]));
+}
+
+/** Line of the first line of `quote` in `text` (1-based), or undefined. */
+export function quoteLine(text, quote) {
+  const first = normalize(String(quote).split('\n').find((l) => l.trim()) ?? '');
+  if (!first) return undefined;
+  const i = text.split('\n').findIndex((l) => normalize(l).includes(first));
+  return i >= 0 ? i + 1 : undefined;
+}
+
+/** Link to a cited place in a code source, from its `url` template ({file}, {line}, {revision}). */
+export function codeUrl(source, file, line) {
+  if (!source.url?.includes('{file}')) return undefined;
+  return source.url.replace('{file}', file).replace('{revision}', source.revision ?? 'HEAD').replace('{line}', line ?? 1);
 }
 
 /** Areas (one YAML file each) with their requirements. */
@@ -61,7 +97,11 @@ export function sectionOf(source, no) {
  * else the document converted once into the cache (.docx etc. with pandoc,
  * .pdf with pdftotext, .md/.txt as is). Returns null if unavailable.
  */
-export function sourceText(cfg, source) {
+export function sourceText(cfg, source, section) {
+  if (source.kind === 'code') {
+    const file = section && path.resolve(source.rootDir, section);
+    return file && fs.existsSync(file) && file.startsWith(source.rootDir) ? fs.readFileSync(file, 'utf8') : null;
+  }
   const bundled = path.join(cfg.path('sourceTexts'), `${source.id}.txt`);
   if (fs.existsSync(bundled)) return fs.readFileSync(bundled, 'utf8');
   if (!source.file) return null;
@@ -108,8 +148,9 @@ export function checkCatalog(cfg, sources = loadSources(cfg), catalog = loadCata
         if (doc.sections.length && !sectionOf(doc, src.section)) errors.push(`${where}: ${t.checkUnknownSection(src.doc, src.section)}`);
         if (!src.quote) { errors.push(`${where}: ${t.checkMissingQuote(src.doc, src.section)}`); continue; }
         if (cfg.paraphraseTypes.includes(src.quote_type)) continue;
-        if (!(src.doc in texts)) texts[src.doc] = sourceText(cfg, doc);
-        const text = texts[src.doc];
+        const key = doc.kind === 'code' ? `${src.doc}:${src.section}` : src.doc;
+        if (!(key in texts)) texts[key] = sourceText(cfg, doc, src.section);
+        const text = texts[key];
         if (text == null) { warnings.push(`${where}: ${t.checkNoSourceText(src.doc)}`); continue; }
         if (!normalize(text).includes(normalize(src.quote))) errors.push(`${where}: ${t.checkQuoteNotFound(src.doc, src.quote.slice(0, 80))}`);
       }

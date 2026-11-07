@@ -23,6 +23,7 @@ export const DEFAULTS = {
     run: 'test-results/run.json',
     rules: 'test-results/rule-tests.json',
     behaviour: 'behaviour',
+    domain: 'domain',
     html: 'report-out',
     friendlybase: 'report-fb',
   },
@@ -52,6 +53,15 @@ export const DEFAULTS = {
     questionTarget: 'question',
     proposalState: 'proposal',
     answeredState: 'answered',
+  },
+  // Domain model (optional, paths.domain): business concepts shared by several
+  // variants (customers, installations). Requirements name the variants they
+  // apply to and their realisation in the new system.
+  domain: {
+    variants: [], // e.g. [{ id: 'glasmacher', title: 'Glasmacher' }, 'nottebohm']
+    realisations: ['core', 'config', 'extension'],
+    // Realisations that need no project code; their share is the fit of the model
+    shared: ['core', 'config'],
   },
   friendlybase: {
     spaceId: undefined, // defaults to slug(title)

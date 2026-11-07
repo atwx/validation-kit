@@ -1,0 +1,50 @@
+# Domain model of the example: the business concepts both variants (a city
+# library and a campus library) need, independent of screens and tables.
+group: Lending
+description: Members borrow media; loans have a due date, can be extended and cost a fee when late.
+concepts:
+  - id: Member
+    title: Member
+    kind: entity
+    scope: core
+    description: A person with a library card.
+    variants:
+      city: "`members` table of the legacy application"
+      campus: "students and staff from the university directory"
+    attributes:
+      - { name: card_no, title: Card number, type: text, variants: { city: members.card, campus: matriculation number } }
+      - { name: surname, title: Surname, type: text }
+  - id: Medium
+    title: Medium
+    kind: entity
+    scope: core
+    attributes:
+      - { name: signature, title: Shelf mark, type: text }
+  - id: Loan
+    title: Loan
+    kind: entity
+    scope: core
+    description: One medium lent to one member.
+    relations:
+      - { to: Member, kind: belongs to }
+      - { to: Medium, kind: refers to }
+    attributes:
+      - { name: due_date, title: Due date, type: date }
+      - { name: extensions, title: Extensions, type: number, note: "At most two." }
+    states:
+      - { name: open, title: open }
+      - { name: returned, title: returned }
+  - id: Reservation
+    title: Reservation
+    kind: entity
+    scope: core
+    relations:
+      - { to: Medium, kind: refers to }
+      - { to: Member, kind: by }
+  - id: Fee
+    title: Late fee
+    kind: rule
+    scope: config
+    description: Amount per day late and cap per medium, configured per installation.
+    variants:
+      city: "lateFee() in legacy/loan.php"

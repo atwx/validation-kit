@@ -128,3 +128,14 @@ td.m-bad { color: var(--bad); background: var(--bad-bg); }
 .pill-target-change { background: var(--ok-bg); color: var(--ok); border-color: #bfe3c9; }
 .intro { max-width: 900px; }
 table.list td:first-child a { white-space: nowrap; }
+
+/* Domain model and code citations */
+.pill-real-core { background: var(--ok-bg); color: var(--ok); border-color: #bfe3c9; }
+.pill-real-config { background: #eef3ff; color: #2a4fa8; border-color: #c9d6f5; }
+.pill-real-extension { background: #fff4e5; color: #9a5b00; border-color: #f2d7a6; }
+.concept-chip { background: #f3f0fa; }
+pre.code-quote { margin: 0 0 4px; padding: 6px 8px; background: #fff; border: 1px solid var(--line, #e3e3e3); border-radius: 3px; font-size: 12.5px; overflow-x: auto; white-space: pre; }
+code.quote-inline { white-space: pre-wrap; font-size: 12px; }
+section.concept { margin: 18px 0 28px; padding-top: 4px; border-top: 1px solid var(--line, #e3e3e3); }
+section.concept h4 { margin: 12px 0 4px; font-size: 14px; }
+ul.refs { margin: 4px 0; padding-left: 18px; }

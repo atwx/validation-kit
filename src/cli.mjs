@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { loadConfig } from './config.mjs';
 import { checkCatalog, loadCatalog, loadSources } from './catalog.mjs';
 import { loadBehaviour, validateBehaviour } from './behaviour.mjs';
+import { checkDomain, domainFit, loadDomain } from './domain.mjs';
 import { junitToRuleTests, writeRuleTests } from './results.mjs';
 import { buildModel } from './model.mjs';
 import { buildHtml } from './report/html.mjs';
@@ -99,6 +100,14 @@ function check(cfg) {
     const f = cfg.behaviour.fields;
     const by = behaviour.inventory.entries.reduce((m, e) => ({ ...m, [e.fm[f.target]]: (m[e.fm[f.target]] ?? 0) + 1 }), {});
     console.log(t.behaviourSummary(Object.entries(by).map(([k, v]) => `${v} ${k}`).join(', '), behaviour.questions.entries.length));
+  }
+  const domain = loadDomain(cfg);
+  const d = checkDomain(cfg, domain, catalog.requirements);
+  errors.push(...d.errors);
+  warnings.push(...d.warnings);
+  if (domain) {
+    const fit = domainFit(cfg, catalog.requirements).map((x) => t.fitLine(x.variant.title, x.share, x.open)).join(', ');
+    console.log(t.domainSummary(domain.concepts.length, fit || '–'));
   }
   for (const w of warnings) console.warn(`${t.warning} ${w}`);
   for (const e of errors) console.error(`${t.error} ${e}`);
