@@ -1,0 +1,41 @@
+area: Loans
+prefix: LN
+description: Lending, extending and returning media
+requirements:
+  - id: LN-001
+    title: At most five media per member
+    risk: high
+    sources:
+      - doc: PROC
+        section: "2.1"
+        quote: "A member may borrow at most five media at the same time."
+    acceptance: >
+      A sixth loan for a member with five open loans is refused with a message.
+    legacy:
+      status: met
+  - id: LN-002
+    title: Two extensions unless reserved
+    risk: medium
+    sources:
+      - doc: PROC
+        section: "2.1"
+        quote: "A loan can be extended twice, unless another member has reserved the medium."
+    acceptance: >
+      The third extension is refused; an extension of a reserved medium is refused.
+    legacy:
+      status: partial
+      evidence:
+        - "Code: extend() checks the number of extensions but not the reservations (legacy/loan.php:212)."
+  - id: LN-003
+    title: Late fee capped at 10 EUR
+    risk: medium
+    sources:
+      - doc: PROC
+        section: "2.2"
+        quote: "The fee is capped at 10 EUR per medium."
+    acceptance: >
+      A medium returned 30 days late costs 10.00 EUR, not 15.00 EUR.
+    legacy:
+      status: not_met
+      evidence:
+        - "Test run 12.05.2026: 30 days late cost 15.00 EUR."

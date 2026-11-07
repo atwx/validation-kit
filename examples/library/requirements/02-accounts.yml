@@ -1,0 +1,31 @@
+area: Accounts and reminders
+prefix: AC
+description: Who sees what, and who is reminded when
+requirements:
+  - id: AC-001
+    title: Members see only their own loans
+    risk: high
+    sources:
+      - doc: PROC
+        section: "4"
+        quote: "Members can only see their own loans."
+    acceptance: >
+      A member who opens the loan list sees their own loans only, also when changing the member id in the URL.
+  - id: AC-002
+    title: Reminder three days before the due date
+    risk: low
+    sources:
+      - doc: PROC
+        section: "3"
+        quote: "Three days before the due date the member receives a reminder by e-mail."
+    acceptance: >
+      The nightly job sends one reminder per loan due in three days.
+  - id: AC-003
+    title: Staff can search loans by member name
+    risk: low
+    sources:
+      - doc: INT
+        quote_type: paraphrase
+        quote: "The front desk looks up loans by the member's surname several times a day."
+    acceptance: >
+      The staff search finds loans by a part of the member's surname.

@@ -1,0 +1,20 @@
+# One file per area. Every requirement needs a source with a quote: literal
+# quotes are checked against the source text (vkit check).
+area: Beispiel
+prefix: EX
+description: Durch den ersten Bereich des Systems ersetzen
+requirements:
+  - id: EX-001
+    title: Anmeldung mit E-Mail und Passwort
+    risk: hoch
+    sources:
+      - doc: SPEC
+        section: "1"
+        quote: "Benutzer melden sich mit ihrer E-Mail-Adresse und einem Passwort an."
+    acceptance: >
+      Die Anmeldeseite zeigt ein Formular; mit gültigen Zugangsdaten erreicht man die Startseite.
+    # Only when shown for the legacy system (code, data analysis or test run):
+    # legacy:
+    #   status: met        # met | partial | not_met
+    #   evidence:
+    #     - "Code: …"

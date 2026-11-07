@@ -1,0 +1,10 @@
+{
+  "system": "rebuild",
+  "systemLabel": "Library rebuild (Silverstripe 6) in ddev",
+  "baseURL": "https://library.ddev.site",
+  "commit": "a1b2c3d",
+  "testData": "fixed test data set (seed/base.yml)",
+  "startedAt": "2026-11-06T09:00:00.000Z",
+  "finishedAt": "2026-11-06T09:25:00.000Z",
+  "databaseRestored": true
+}

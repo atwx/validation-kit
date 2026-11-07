@@ -1,0 +1,63 @@
+{
+  "tool": "PHPUnit 12",
+  "finishedAt": "2026-11-07T16:36:24.273Z",
+  "tests": [
+    {
+      "id": "App\\Tests\\LoanLimitTest::Five open loans block a sixth [LN-001]",
+      "class": "App\\Tests\\LoanLimitTest",
+      "method": "Five open loans block a sixth [LN-001]",
+      "title": "Five open loans block a sixth",
+      "file": "app/tests/LoanLimitTest.php",
+      "line": 18,
+      "status": "passed",
+      "reqs": [
+        "LN-001"
+      ],
+      "targets": [],
+      "timeMs": 41
+    },
+    {
+      "id": "App\\Tests\\ExtensionTest::Third extension is refused [LN-002]",
+      "class": "App\\Tests\\ExtensionTest",
+      "method": "Third extension is refused [LN-002]",
+      "title": "Third extension is refused",
+      "file": "app/tests/ExtensionTest.php",
+      "line": 22,
+      "status": "passed",
+      "reqs": [
+        "LN-002"
+      ],
+      "targets": [],
+      "timeMs": 32
+    },
+    {
+      "id": "App\\Tests\\ExtensionTest::Reserved medium cannot be extended [LN-002]",
+      "class": "App\\Tests\\ExtensionTest",
+      "method": "Reserved medium cannot be extended [LN-002]",
+      "title": "Reserved medium cannot be extended",
+      "file": "app/tests/ExtensionTest.php",
+      "line": 35,
+      "status": "failed",
+      "message": "Failed asserting that false is true.",
+      "reqs": [
+        "LN-002"
+      ],
+      "targets": [],
+      "timeMs": 29
+    },
+    {
+      "id": "App\\Tests\\LoanSearchTest::Search finds loans by part of the surname [AC-003]",
+      "class": "App\\Tests\\LoanSearchTest",
+      "method": "Search finds loans by part of the surname [AC-003]",
+      "title": "Search finds loans by part of the surname",
+      "file": "app/tests/LoanSearchTest.php",
+      "line": 12,
+      "status": "passed",
+      "reqs": [
+        "AC-003"
+      ],
+      "targets": [],
+      "timeMs": 55
+    }
+  ]
+}

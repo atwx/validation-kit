@@ -1,0 +1,17 @@
+{
+  "name": "validation",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "vkit check",
+    "test:e2e": "playwright test",
+    "rules": "vkit junit test-results/junit.xml",
+    "report": "vkit report",
+    "report:fb": "vkit report --fb",
+    "validate": "vkit check && (playwright test; vkit report)"
+  },
+  "devDependencies": {
+    "@atwx/validation-kit": "github:atwx/validation-kit#v0.1.0",
+    "@playwright/test": "^1.56.0"
+  }
+}

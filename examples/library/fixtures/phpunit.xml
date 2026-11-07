@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Rules" tests="4" failures="1">
+    <testcase name="Five open loans block a sixth [LN-001]" class="App\Tests\LoanLimitTest" classname="App.Tests.LoanLimitTest" file="app/tests/LoanLimitTest.php" line="18" assertions="2" time="0.041"/>
+    <testcase name="Third extension is refused [LN-002]" class="App\Tests\ExtensionTest" classname="App.Tests.ExtensionTest" file="app/tests/ExtensionTest.php" line="22" assertions="1" time="0.032"/>
+    <testcase name="Reserved medium cannot be extended [LN-002]" class="App\Tests\ExtensionTest" classname="App.Tests.ExtensionTest" file="app/tests/ExtensionTest.php" line="35" assertions="1" time="0.029">
+      <failure type="PHPUnit\Framework\ExpectationFailedException" message="Failed asserting that false is true.">Failed asserting that false is true.
+app/tests/ExtensionTest.php:41</failure>
+    </testcase>
+    <testcase name="Search finds loans by part of the surname [AC-003]" class="App\Tests\LoanSearchTest" classname="App.Tests.LoanSearchTest" file="app/tests/LoanSearchTest.php" line="12" assertions="3" time="0.055"/>
+  </testsuite>
+</testsuites>

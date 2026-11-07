@@ -1,0 +1,30 @@
+{
+  "name": "@atwx/validation-kit",
+  "version": "0.1.0",
+  "description": "Requirements catalogue, flow and rule tests and a traceable validation report for rebuilding or upgrading a system",
+  "license": "BSD-3-Clause",
+  "author": "Adiwidjaja Teamworks GmbH",
+  "repository": { "type": "git", "url": "git+https://github.com/atwx/validation-kit.git" },
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "bin": { "vkit": "bin/vkit.mjs" },
+  "exports": {
+    ".": "./src/index.mjs",
+    "./playwright": { "types": "./src/playwright.d.ts", "default": "./src/playwright.mjs" },
+    "./report/style.css": "./src/report/style.css"
+  },
+  "files": ["bin", "src", "templates", "README.md", "LICENSE", "CHANGELOG.md"],
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "example": "node bin/vkit.mjs report --dir examples/library && node bin/vkit.mjs report --fb --dir examples/library"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0"
+  },
+  "peerDependencies": {
+    "@playwright/test": ">=1.45"
+  },
+  "peerDependenciesMeta": {
+    "@playwright/test": { "optional": true }
+  }
+}

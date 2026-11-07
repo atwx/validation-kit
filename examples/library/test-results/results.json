@@ -1,0 +1,105 @@
+{
+  "suites": [
+    {
+      "title": "",
+      "file": "",
+      "specs": [],
+      "suites": [
+        {
+          "title": "e2e/01-lend-extend.spec.ts",
+          "file": "e2e/01-lend-extend.spec.ts",
+          "specs": [
+            {
+              "title": "Flow 1: Lend and extend",
+              "file": "e2e/01-lend-extend.spec.ts",
+              "tests": [
+                {
+                  "annotations": [
+                    {
+                      "type": "req",
+                      "description": "LN-001, LN-002"
+                    }
+                  ],
+                  "results": [
+                    {
+                      "status": "failed",
+                      "startTime": "2026-11-06T09:00:00.000Z",
+                      "duration": 9100,
+                      "attachments": [
+                        {
+                          "name": "flow.json",
+                          "contentType": "application/json",
+                          "body": "eyJpZCI6IjEiLCJ0aXRsZSI6IkxlbmQgYW5kIGV4dGVuZCIsInB1cnBvc2UiOiJBIG1lbWJlciBib3Jyb3dzIG1lZGlhIGFuZCBleHRlbmRzIGEgbG9hbi4iLCJyb2xlcyI6WyJNZW1iZXIiLCJGcm9udCBkZXNrIl0sInJlcXMiOlsiTE4tMDAxIiwiTE4tMDAyIl0sInN5c3RlbSI6InJlYnVpbGQiLCJzcGVjRmlsZSI6ImUyZS8wMS1sZW5kLWV4dGVuZC5zcGVjLnRzIiwic3RlcHMiOlt7InRpdGxlIjoiQm9ycm93IGZpdmUgbWVkaWEiLCJwcm9jZWR1cmUiOiJGcm9udCBkZXNrIGxlbmRzIGZpdmUgbWVkaWEgdG8gdGhlIHRlc3QgbWVtYmVyLiIsImV4cGVjdGVkIjoiQWxsIGZpdmUgbG9hbnMgYXJlIGJvb2tlZC4iLCJyZXFzIjpbIkxOLTAwMSJdLCJuciI6IjEuMSIsImFjdHVhbCI6IkZpdmUgbG9hbnMgb3Blbi4iLCJmdWxmaWxsZWQiOnRydWUsImtub3duRGVmZWN0QXBwbGllZCI6ZmFsc2UsImNoZWNrcyI6W10sImF0dGFjaG1lbnRzIjpbXSwic3RhcnRlZEF0IjoiMjAyNi0xMS0wNlQwOTowMTowMC4wMDBaIiwiZHVyYXRpb25NcyI6MTIwMH0seyJ0aXRsZSI6IlNpeHRoIGxvYW4gaXMgcmVmdXNlZCIsInByb2NlZHVyZSI6IkZyb250IGRlc2sgdHJpZXMgdG8gbGVuZCBhIHNpeHRoIG1lZGl1bS4iLCJleHBlY3RlZCI6IlRoZSBsb2FuIGlzIHJlZnVzZWQgd2l0aCBhIG1lc3NhZ2UuIiwicmVxcyI6WyJMTi0wMDEiXSwibnIiOiIxLjIiLCJhY3R1YWwiOiJNZXNzYWdlIOKAnExpbWl0IG9mIGZpdmUgbWVkaWEgcmVhY2hlZOKAnS4iLCJmdWxmaWxsZWQiOnRydWUsImtub3duRGVmZWN0QXBwbGllZCI6ZmFsc2UsImNoZWNrcyI6W3sibGFiZWwiOiJFcnJvciBtZXNzYWdlIHNob3duIiwib2siOnRydWV9LHsibGFiZWwiOiJObyBzaXh0aCBsb2FuIGJvb2tlZCIsIm9rIjp0cnVlfV0sImF0dGFjaG1lbnRzIjpbXSwic3RhcnRlZEF0IjoiMjAyNi0xMS0wNlQwOTowMjowMC4wMDBaIiwiZHVyYXRpb25NcyI6MTIwMH0seyJ0aXRsZSI6IkV4dGVuZCBhIHJlc2VydmVkIG1lZGl1bSIsInByb2NlZHVyZSI6IkFub3RoZXIgbWVtYmVyIHJlc2VydmVzIG1lZGl1bSAzOyB0aGUgdGVzdCBtZW1iZXIgZXh0ZW5kcyBpdC4iLCJleHBlY3RlZCI6IlRoZSBleHRlbnNpb24gaXMgcmVmdXNlZC4iLCJyZXFzIjpbIkxOLTAwMiJdLCJuciI6IjEuMyIsImFjdHVhbCI6Ik5vdCBtZXQ6IGV4dGVuc2lvbiByZWZ1c2VkLiIsImZ1bGZpbGxlZCI6ZmFsc2UsImtub3duRGVmZWN0QXBwbGllZCI6ZmFsc2UsImNoZWNrcyI6W3sibGFiZWwiOiJFeHRlbnNpb24gcmVmdXNlZCIsIm9rIjpmYWxzZSwiZXJyb3IiOiJleHBlY3RlZCBcInJlZnVzZWRcIiwgZ290IFwiZXh0ZW5kZWQgdW50aWwgMjAyNi0xMi0zMVwiIn1dLCJhdHRhY2htZW50cyI6W10sInN0YXJ0ZWRBdCI6IjIwMjYtMTEtMDZUMDk6MDM6MDAuMDAwWiIsImR1cmF0aW9uTXMiOjEyMDB9XX0="
+                        }
+                      ],
+                      "errors": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "e2e/02-return-late.spec.ts",
+          "file": "e2e/02-return-late.spec.ts",
+          "specs": [
+            {
+              "title": "Flow 2: Return late",
+              "file": "e2e/02-return-late.spec.ts",
+              "tests": [
+                {
+                  "annotations": [
+                    {
+                      "type": "req",
+                      "description": "LN-003"
+                    }
+                  ],
+                  "results": [
+                    {
+                      "status": "passed",
+                      "startTime": "2026-11-06T09:00:00.000Z",
+                      "duration": 9100,
+                      "attachments": [
+                        {
+                          "name": "flow.json",
+                          "contentType": "application/json",
+                          "body": "eyJpZCI6IjIiLCJ0aXRsZSI6IlJldHVybiBsYXRlIiwicHVycG9zZSI6IkEgbWVtYmVyIHJldHVybnMgYSBtZWRpdW0gMzAgZGF5cyBsYXRlLiIsInJvbGVzIjpbIkZyb250IGRlc2siXSwicmVxcyI6WyJMTi0wMDMiXSwic3lzdGVtIjoicmVidWlsZCIsInNwZWNGaWxlIjoiZTJlLzAyLXJldHVybi1sYXRlLnNwZWMudHMiLCJzdGVwcyI6W3sidGl0bGUiOiJSZXR1cm4gMzAgZGF5cyBsYXRlIiwicHJvY2VkdXJlIjoiRnJvbnQgZGVzayBib29rcyB0aGUgcmV0dXJuIG9mIGEgbWVkaXVtIGR1ZSAzMCBkYXlzIGFnby4iLCJleHBlY3RlZCI6IlRoZSBmZWUgaXMgMTAuMDAgRVVSLiIsInJlcXMiOlsiTE4tMDAzIl0sIm5yIjoiMi4xIiwiYWN0dWFsIjoiRmVlIDE1LjAwIEVVUi4gTm90IG1ldDogZmVlIGNhcHBlZCBhdCAxMCBFVVIuIiwiZnVsZmlsbGVkIjpmYWxzZSwia25vd25EZWZlY3RBcHBsaWVkIjp0cnVlLCJrbm93bkRlZmVjdCI6eyJzeXN0ZW0iOiJyZWJ1aWxkIiwibm90ZSI6IktlcHQgbGlrZSB0aGUgbGVnYWN5IHN5c3RlbSB1bnRpbCBwcm9wb3NhbCBRLTAwMSBpcyBkZWNpZGVkLiJ9LCJjaGVja3MiOltdLCJhdHRhY2htZW50cyI6W10sInN0YXJ0ZWRBdCI6IjIwMjYtMTEtMDZUMDk6MDE6MDAuMDAwWiIsImR1cmF0aW9uTXMiOjEyMDB9XX0="
+                        }
+                      ],
+                      "errors": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "e2e/accounts.spec.ts",
+          "file": "e2e/accounts.spec.ts",
+          "specs": [
+            {
+              "title": "member cannot open the loans of another member AC-001",
+              "file": "e2e/accounts.spec.ts",
+              "tests": [
+                {
+                  "annotations": [],
+                  "results": [
+                    {
+                      "status": "passed",
+                      "startTime": "2026-11-06T09:20:00.000Z",
+                      "duration": 2100,
+                      "attachments": [],
+                      "errors": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

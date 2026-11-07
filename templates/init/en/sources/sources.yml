@@ -1,0 +1,9 @@
+# Source documents of the requirements. `sections` mirrors the outline of each
+# document. `file` is converted to text for the quote check (.docx with
+# pandoc, .pdf with pdftotext, .md/.txt as is); alternatively put the text into
+# sources/text/<id>.txt. Sources without text (interviews, workshops) use
+# quote_type: paraphrase in the requirement.
+- id: SPEC
+  title: Example specification
+  sections:
+    - { no: "1", title: "Login" }

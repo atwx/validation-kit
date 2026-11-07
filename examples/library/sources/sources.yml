@@ -1,0 +1,16 @@
+# Source documents of the requirements. `sections` mirrors the outline of each
+# document, so the report shows coverage per section.
+- id: PROC
+  title: Lending process description, revision 3
+  file: sources/lending-process.md
+  revision: "3"
+  sections:
+    - { no: "1", title: "Purpose" }
+    - { no: "2", title: "Loans" }
+    - { no: "2.1", title: "Lending" }
+    - { no: "2.2", title: "Returns and fees" }
+    - { no: "3", title: "Reminders" }
+    - { no: "4", title: "Accounts" }
+- id: INT
+  title: Interviews with the library staff (May 2026)
+  sections: []
