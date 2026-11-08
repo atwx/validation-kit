@@ -64,6 +64,24 @@ test('plain test with test.fail() is a known defect, not an aborted flow', async
   assert.equal(model.status('AC-002'), 'deviation');
 });
 
+test('attachment paths of another machine are resolved next to the Playwright report', async () => {
+  const dir = tmp();
+  fs.cpSync(EXAMPLE, dir, { recursive: true });
+  fs.mkdirSync(path.join(dir, 'test-results/flow-1'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'test-results/flow-1/shot.png'), 'png');
+  const record = {
+    id: '9', title: 'Container run', purpose: '', roles: [], reqs: ['AC-002'],
+    steps: [{ nr: '9.1', title: 'x', procedure: '', expected: '', reqs: ['AC-002'], actual: '', fulfilled: true, knownDefectApplied: false,
+      checks: [], attachments: [{ name: 'Anlage 9.1-1', caption: 'Shot', file: '/e2e/test-results/flow-1/shot.png' }], startedAt: '', durationMs: 1 }],
+  };
+  const body = Buffer.from(JSON.stringify(record)).toString('base64');
+  fs.writeFileSync(path.join(dir, 'test-results/results.json'), JSON.stringify({ suites: [{ title: 'x', specs: [{ title: 'Prozess 9', file: 'x.spec.ts',
+    tests: [{ status: 'expected', annotations: [], results: [{ status: 'passed', startTime: '', duration: 1, errors: [], attachments: [{ name: 'flow.json', contentType: 'application/json', body }] }] }] }] }] }));
+  const model = buildModel(resolveConfig(dir, {}));
+  const att = model.flows[0].record.steps[0].attachments[0];
+  assert.equal(att.file, path.join(dir, 'test-results/flow-1/shot.png'));
+});
+
 test('unknown requirement ids in tests fail loudly', async () => {
   const dir = tmp();
   fs.cpSync(EXAMPLE, dir, { recursive: true });

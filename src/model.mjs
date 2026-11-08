@@ -5,6 +5,8 @@ import { codeUrl, loadCatalog, loadSources, quoteLine, sourceText } from './cata
 import { domainFit, loadDomain, requirementsByConcept } from './domain.mjs';
 import { loadBehaviour } from './behaviour.mjs';
 import { loadFlows, loadRuleTests } from './results.mjs';
+import fs from 'node:fs';
+import path from 'node:path';
 import { readJson, slug } from './util.mjs';
 
 /** Requirement status codes, in report order. */
@@ -32,12 +34,32 @@ export function buildModel(cfg) {
   const n = cfg.numbering;
   const pad = (i, w) => String(i).padStart(w, '0');
 
+  // Attachment paths are absolute paths of the machine that ran the tests
+  // (e.g. /e2e/test-results/… in a container). If such a path does not exist
+  // here, the longest trailing part that exists next to the Playwright report
+  // is used.
+  const reportDir = path.dirname(cfg.path('playwright'));
+  const locate = (file) => {
+    if (!file || fs.existsSync(file)) return file;
+    const parts = file.split(/[\\/]/).filter(Boolean);
+    for (let i = 1; i < parts.length; i++) {
+      for (const base of [reportDir, path.dirname(reportDir)]) {
+        const candidate = path.join(base, ...parts.slice(i));
+        if (fs.existsSync(candidate)) return candidate;
+      }
+    }
+    return file;
+  };
+
   // Deviations in protocol order; attachments get their target file name
   let flowDeviations = 0;
   for (const f of flows) {
     for (const step of f.record.steps) {
       if (!step.fulfilled) step.deviation = `${n.flowDeviation}${pad(++flowDeviations, n.deviationPad)}`;
-      for (const a of step.attachments) a.target = `${slug(a.name)}.png`;
+      for (const a of step.attachments) {
+        a.target = `${slug(a.name)}.png`;
+        a.file = locate(a.file);
+      }
     }
     f.deviations = f.record.steps.filter((s) => !s.fulfilled);
   }

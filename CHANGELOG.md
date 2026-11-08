@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.3 – 2026-11-08
+
+- Screenshots of flow tests run on another machine or in a container (absolute paths such as `/e2e/test-results/…`) are found next to the Playwright report
+
 ## 0.2.2 – 2026-11-08
 
 - Plain Playwright tests marked with `test.fail('…')` count as known defect of the system under test (step not fulfilled, flow not aborted); the description is the note

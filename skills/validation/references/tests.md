@@ -43,6 +43,10 @@ flowTest({ id: '4', title: 'Approval by the process owner', purpose: '…', role
 - Flows share one database and build on each other: `workers: 1`, and the
   JSON reporter to `test-results/results.json`.
 - Page loads aborted by ERR_NETWORK_CHANGED (Docker starting containers) are retried.
+- Playwright lists a flow test under the kit's file, not the spec file; select
+  single flows by title (`npx playwright test -g "Prozess 3:"`), not by path.
+- Tests may run in a container (e.g. the Playwright image in docker compose):
+  screenshot paths in the report JSON are resolved next to the report.
 
 Plain Playwright tests count as one-step flows when they name requirements:
 `test('…', { annotation: { type: 'req', description: 'AB-001, AB-002' } }, …)`
