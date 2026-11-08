@@ -46,7 +46,9 @@ flowTest({ id: '4', title: 'Approval by the process owner', purpose: '…', role
 
 Plain Playwright tests count as one-step flows when they name requirements:
 `test('…', { annotation: { type: 'req', description: 'AB-001, AB-002' } }, …)`
-or an id in the title.
+or an id in the title. A plain test marked with `test.fail('Known bug: …')`
+is shown as known defect with that note: the step is not fulfilled, the flow
+is not aborted.
 
 ## Rule tests
 

@@ -11,7 +11,7 @@
     "validate": "vkit check && (playwright test; vkit report)"
   },
   "devDependencies": {
-    "@atwx/validation-kit": "github:atwx/validation-kit#v0.2.1",
+    "@atwx/validation-kit": "github:atwx/validation-kit#v0.2.2",
     "@playwright/test": "^1.56.0"
   }
 }

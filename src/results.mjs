@@ -45,13 +45,16 @@ function plainFlow(spec, t, res, titles, idRe) {
   if (!reqs.length || res.status === 'skipped') return null;
   const passed = res.status === 'passed';
   const error = (res.errors ?? [])[0]?.message?.replace(/\u001b\[[0-9;]*m/g, '').split('\n')[0];
+  // test.fail('…') marks a known defect: the test is expected to fail on this system
+  const fail = (t.annotations ?? []).find((a) => a.type === 'fail');
+  const known = !passed && !!fail && t.status === 'expected';
   const id = [...titles.filter(Boolean).slice(1), spec.title].join(' › ');
   const step = {
     nr: '1', title: spec.title, procedure: '', expected: spec.title, reqs, actual: passed ? '' : error ?? res.status,
-    fulfilled: res.status === 'passed', knownDefectApplied: false, checks: [], attachments: [], startedAt: res.startTime, durationMs: res.duration,
+    fulfilled: res.status === 'passed', knownDefectApplied: known, knownDefect: known ? { system: '', note: fail.description ?? '' } : undefined, checks: [], attachments: [], startedAt: res.startTime, durationMs: res.duration,
   };
   return {
-    id, plain: true, status: passed ? 'passed' : res.status, startTime: res.startTime, duration: res.duration, file: spec.file,
+    id, plain: true, status: passed || known ? 'passed' : res.status, startTime: res.startTime, duration: res.duration, file: spec.file,
     record: { id, title: spec.title, purpose: '', roles: [], reqs, steps: [step], specFile: spec.file },
   };
 }

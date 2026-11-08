@@ -45,6 +45,25 @@ test('model: status per requirement, numbered deviations, known defects', async 
   assert.equal(model.rules[0].nr, 'R01');
 });
 
+test('plain test with test.fail() is a known defect, not an aborted flow', async () => {
+  const dir = tmp();
+  fs.cpSync(EXAMPLE, dir, { recursive: true });
+  const file = path.join(dir, 'test-results/results.json');
+  const spec = (title, status, testStatus, annotations) => ({
+    title, file: 'x.spec.ts',
+    tests: [{ status: testStatus, annotations, results: [{ status, startTime: '2026-11-08T10:00:00Z', duration: 5, attachments: [], errors: status === 'failed' ? [{ message: 'expected 1 to be 2' }] : [] }] }],
+  });
+  fs.writeFileSync(file, JSON.stringify({ suites: [{ title: 'x.spec.ts', specs: [
+    spec('english invoice', 'failed', 'expected', [{ type: 'req', description: 'AC-002' }, { type: 'fail', description: 'Known bug: hard-coded amount' }]),
+  ] }] }));
+  const model = buildModel(resolveConfig(dir, {}));
+  const flow = model.flows.find((f) => f.plain);
+  assert.equal(flow.status, 'passed');
+  assert.equal(flow.record.steps[0].knownDefectApplied, true);
+  assert.equal(flow.record.steps[0].knownDefect.note, 'Known bug: hard-coded amount');
+  assert.equal(model.status('AC-002'), 'deviation');
+});
+
 test('unknown requirement ids in tests fail loudly', async () => {
   const dir = tmp();
   fs.cpSync(EXAMPLE, dir, { recursive: true });

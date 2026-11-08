@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.2 – 2026-11-08
+
+- Plain Playwright tests marked with `test.fail('…')` count as known defect of the system under test (step not fulfilled, flow not aborted); the description is the note
+- Report: plain background for code inside code quotes
+
 ## 0.2.1 – 2026-11-08
 
 - Code quotes are matched with whitespace normalisation only; `<`, `*`, `_` in code no longer break the check
