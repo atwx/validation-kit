@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.1 – 2026-11-13
+
+- Levels: a level without requirements of a variant gets no row.
+
 ## 0.4.0 – 2026-11-13
 
 - Requirement levels (`levels` in the config, `level:` per requirements file with an override per requirement, default the first level), e.g. business behaviour and operating structure. Without levels nothing changes.

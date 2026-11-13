@@ -166,7 +166,9 @@ export function buildProgress(cfg, behaviour, requirements, areas) {
     levelRows: () => levels.flatMap((l) => {
       const reqs = requirements.filter((r) => r.level === l.id);
       return variants.length
-        ? variants.map((v) => row(`${l.title} – ${v.title}`, tally(reqs.filter((r) => variantsOf(cfg, r).includes(v.id)))))
+        ? variants.map((v) => [v, tally(reqs.filter((r) => variantsOf(cfg, r).includes(v.id)))])
+          // A level a variant has no requirements in is left out
+          .filter(([, x]) => x.total).map(([v, x]) => row(`${l.title} – ${v.title}`, x))
         : [row(l.title, tally(reqs))];
     }),
     levels: levels.map((l) => ({
