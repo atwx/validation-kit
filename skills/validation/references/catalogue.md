@@ -56,6 +56,7 @@ cached in `.cache/sources/`). Without text, `vkit check` warns and skips the quo
 ```yaml
 area: Approval
 prefix: FG                     # every id in this file starts with FG-
+level: business                # optional, one of `levels` in vkit.config.mjs
 description: Approval of documents by process owners
 requirements:
   - id: FG-013
@@ -72,6 +73,7 @@ requirements:
     acceptance: >
       A rejection closes the request with status “rejected”; request and comments stay stored.
     note: "…"                  # optional, e.g. a contradiction between sources
+    level: ui                  # optional, overrides the file's level
     legacy:                    # only when shown for the legacy system
       status: not_met          # met | partial | not_met
       evidence:
@@ -96,3 +98,20 @@ emphasis and soft hyphens), legacy status without evidence.
 
 Optional fields when the project has a domain model ([domain.md](domain.md)):
 `domain` (concepts), `variants` (default: all), `realisation` (core, config, extension).
+
+## Levels
+
+Requirements can belong to levels, e.g. the business behaviour and the operating
+structure (navigation, sub-pages, actions per page). Configure them in
+`vkit.config.mjs`; without `levels` nothing changes.
+
+```js
+levels: [{ id: 'business', title: 'Business' }, { id: 'ui', title: 'Operating structure' }],
+```
+
+A file sets `level:` at the top, a requirement may override it, the default is the
+first level. `vkit check` rejects unknown level ids. The progress (see behaviour.md)
+is then also shown per level and variant: in `vkit status` as
+"City library: Business 100 %, Operating structure 14 %, total 93 %", in the HTML
+report and the FriendlyBase overview as a table "By level". The FriendlyBase package
+gives every requirement the property `level` (`ebene` in German) and a board "By level".

@@ -161,6 +161,8 @@ ${body}
   const progressSection = progress ? `<h2>${esc(t.buildState)}</h2>
 <p>${esc(progress.lead)}</p>
 ${progressTable(progress.head(fit.length ? t.variant : ''), progress.rows())}
+${progress.levels.length ? `<h3>${esc(t.byLevel)}</h3>
+${progressTable(progress.head(t.level), progress.levelRows())}` : ''}
 <details><summary>${esc(t.areas)}</summary>
 ${progressTable(progress.head(t.area), progress.areaRows())}
 </details>` : '';

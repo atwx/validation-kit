@@ -126,7 +126,7 @@ ${table([t.area, t.requirements, t.status.passed, ...(rules.length ? [t.status.u
 ${table([t.flow, t.title, t.steps, t.fulfilledShort, t.deviations, t.result], flows.map((fl) => [
     link(flowNode(fl), flowName(fl)), fl.record.title, fl.record.steps.length, fl.record.steps.filter((s) => s.fulfilled).length, fl.deviations.length || '', t.flowResult[flowResult(fl)],
   ]))}
-${progress ? `\n## ${t.buildState}\n\n${progress.lead}\n\n${table(progress.head(progress.rows().length > 1 ? t.variant : ''), progress.rows())}\n\n### ${t.areas}\n\n${table(progress.head(t.area), progress.areaRows())}\n` : ''}${targetSchema ? `\n## ${t.newVersusLegacy}\n\n${table([t.target, t.requirements], (targetSchema.options ?? []).map((o) => [typeof o === 'string' ? o : o.label, behaviour.inventory.entries.filter((e) => e.fm[f.target] === (typeof o === 'string' ? o : o.value)).length]))}\n` : ''}
+${progress ? `\n## ${t.buildState}\n\n${progress.lead}\n\n${table(progress.head(progress.rows().length > 1 ? t.variant : ''), progress.rows())}\n\n${progress.levels.length ? `### ${t.byLevel}\n\n${table(progress.head(t.level), progress.levelRows())}\n\n` : ''}### ${t.areas}\n\n${table(progress.head(t.area), progress.areaRows())}\n` : ''}${targetSchema ? `\n## ${t.newVersusLegacy}\n\n${table([t.target, t.requirements], (targetSchema.options ?? []).map((o) => [typeof o === 'string' ? o : o.label, behaviour.inventory.entries.filter((e) => e.fm[f.target] === (typeof o === 'string' ? o : o.value)).length]))}\n` : ''}
 > [!note] ${t.confirmAndComment}
 > ${t.confirmText}
 `);
@@ -142,6 +142,8 @@ ${progress ? `\n## ${t.buildState}\n\n${progress.lead}\n\n${table(progress.head(
   if (hasLegacy) reqSchema[n.legacyProp] = { type: 'select', label: t.legacySystem, options: LEGACY_OPTIONS };
   if (targetSchema) reqSchema[n.targetProp] = { type: 'select', label: t.targetInNewSystem, options: targetSchema.options ?? [] };
   if (progress) reqSchema[n.buildProp] = { type: 'select', label: t.buildState, options: progress.options };
+  const levels = cfg.levels ?? [];
+  if (levels.length) reqSchema[n.levelProp] = { type: 'select', label: t.level, options: levels.map((l, i) => option(l.id, l.title, ['blue', 'purple', 'green', 'yellow'][i] ?? 'gray')) };
   reqSchema[n.flows] = { type: 'relation', label: t.flowTests, collection: n.flows, display: 'ref' };
   if (rules.length) reqSchema[n.rules] = { type: 'relation', label: t.ruleTests, collection: n.rules, display: 'ref' };
   if (proposals.length) reqSchema[n.proposals] = { type: 'relation', label: t.proposals, collection: n.proposals, display: 'ref' };
@@ -152,11 +154,12 @@ ${progress ? `\n## ${t.buildState}\n\n${progress.lead}\n\n${table(progress.head(
 ${texts.requirementsIntro ?? t.requirementsIntro(requirements.length)}
 `);
   const views = [
-    { name: t.allRequirements, type: 'table', properties: ['ref', n.areaProp, n.riskProp, n.resultProp, ...(hasLegacy ? [n.legacyProp] : []), ...(targetSchema ? [n.targetProp] : []), ...(progress ? [n.buildProp] : []), 'confirmation'], sorts: [{ property: 'ref', direction: 'asc' }], default: true },
+    { name: t.allRequirements, type: 'table', properties: ['ref', n.areaProp, n.riskProp, n.resultProp, ...(hasLegacy ? [n.legacyProp] : []), ...(targetSchema ? [n.targetProp] : []), ...(levels.length ? [n.levelProp] : []), ...(progress ? [n.buildProp] : []), 'confirmation'], sorts: [{ property: 'ref', direction: 'asc' }], default: true },
     { name: t.byResult, type: 'board', group_by: n.resultProp, properties: ['ref', n.areaProp, ...(targetSchema ? [n.targetProp] : [])] },
     { name: t.confirmation, type: 'board', group_by: 'confirmation', properties: ['ref', n.areaProp, n.resultProp] },
   ];
-  if (progress) views.splice(1, 0, { name: t.byBuild, type: 'board', group_by: n.buildProp, properties: ['ref', n.areaProp, ...(targetSchema ? [n.targetProp] : [])] });
+  if (progress) views.splice(1, 0, { name: t.byBuild, type: 'board', group_by: n.buildProp, properties: ['ref', n.areaProp, ...(levels.length ? [n.levelProp] : []), ...(targetSchema ? [n.targetProp] : [])] });
+  if (levels.length) views.splice(progress ? 2 : 1, 0, { name: t.byLevel, type: 'board', group_by: n.levelProp, properties: ['ref', n.areaProp, ...(progress ? [n.buildProp] : [])] });
   if (targetSchema) {
     views.push({ name: t.byTarget, type: 'board', group_by: n.targetProp, properties: ['ref', n.areaProp, n.resultProp] });
     for (const o of targetSchema.options ?? []) {
@@ -177,6 +180,7 @@ ${texts.requirementsIntro ?? t.requirementsIntro(requirements.length)}
     if (r.legacy) fm[n.legacyProp] = r.legacy.status;
     if (inv) fm[n.targetProp] = inv.fm[f.target];
     if (progress) fm[n.buildProp] = progress.value(r);
+    if (levels.length && r.level) fm[n.levelProp] = r.level;
     const flowIds = [...new Set(steps.map(({ flow }) => flowNode(flow)))];
     if (flowIds.length) fm[n.flows] = flowIds;
     if (ruleList.length) fm[n.rules] = ruleList.map(ruleNode);

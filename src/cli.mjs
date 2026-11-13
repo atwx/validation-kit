@@ -69,7 +69,18 @@ export async function main(argv) {
       if (model.progress) {
         const { hasShare } = model.progress;
         console.log(`\n${t.buildState}${hasShare ? ` (${model.progress.lead})` : ''}`);
-        for (const r of model.progress.rows()) console.log(`  ${r[0] || t.progressAll}: ${hasShare ? `${r.at(-1)}, ` : ''}${model.progress.options.map((o, i) => (r[i + 2] ? `${r[i + 2]} ${o.label}` : '')).filter(Boolean).join(', ')}`);
+        const pr = model.progress;
+        // Share per level of one variant (or of all), e.g. "Fachlich 100 %, Bedienstruktur 14 %"
+        const byLevel = (variantId) => pr.levels.map((l) => {
+          const x = variantId ? l.variants.find((v) => v.variant.id === variantId) : l;
+          return x && x.total ? `${l.level.title} ${pr.pct(x)}` : null;
+        }).filter(Boolean).join(', ');
+        const variantIds = pr.variants.map((v) => v.variant.id);
+        pr.rows().forEach((r, i) => {
+          const levels = hasShare && pr.levels.length ? byLevel(variantIds[i]) : '';
+          const share = hasShare ? `${levels ? `${levels}, ${t.progressTotal} ` : ''}${r.at(-1)}, ` : '';
+          console.log(`  ${r[0] || t.progressAll}: ${share}${pr.options.map((o, j) => (r[j + 2] ? `${r[j + 2]} ${o.label}` : '')).filter(Boolean).join(', ')}`);
+        });
       }
       return 0;
     }

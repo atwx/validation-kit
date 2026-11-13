@@ -148,19 +148,31 @@ export function buildProgress(cfg, behaviour, requirements, areas) {
     };
   };
   const variants = domainVariants(cfg);
+  const levels = cfg.levels ?? [];
   const { t } = cfg;
   const pct = (x) => (x.share === null ? '–' : `${Math.round(x.share * 100)} %`);
   // Table rows shared by the report builders: per variant (or all), per area
   const row = (name, x) => [name, x.total, ...options.map((o) => x.counts[o.value] || ''), x.excluded || '', ...(hasShare ? [pct(x)] : [])];
   const excludedText = [...p.exclude.map(labelOf), ...p.excludeTargets.map((v) => behaviour.labels[target]?.[v] ?? v)].join(', ');
   return {
-    field, label: schema.label ?? field, options, value, labelOf, hasShare,
+    field, label: schema.label ?? field, options, value, labelOf, hasShare, pct,
     lead: !hasShare ? '' : t.progressLead(known(p.done).map(labelOf).join(', '), known(p.partial).map(labelOf).join(', '), excludedText),
     head: (first) => [first, t.requirements, ...options.map((o) => o.label), t.notCounted, ...(hasShare ? [t.progressShare] : [])],
     rows: () => (variants.length
       ? variants.map((v) => row(v.title, tally(requirements.filter((r) => variantsOf(cfg, r).includes(v.id)))))
       : [row(t.progressAll, tally(requirements))]),
     areaRows: () => areas.map((a) => row(a.area, tally(a.requirements))),
+    // Per level (config levels), and within it per variant; empty without levels
+    levelRows: () => levels.flatMap((l) => {
+      const reqs = requirements.filter((r) => r.level === l.id);
+      return variants.length
+        ? variants.map((v) => row(`${l.title} – ${v.title}`, tally(reqs.filter((r) => variantsOf(cfg, r).includes(v.id)))))
+        : [row(l.title, tally(reqs))];
+    }),
+    levels: levels.map((l) => ({
+      level: l, ...tally(requirements.filter((r) => r.level === l.id)),
+      variants: variants.map((v) => ({ variant: v, ...tally(requirements.filter((r) => r.level === l.id && variantsOf(cfg, r).includes(v.id))) })),
+    })),
     all: tally(requirements),
     variants: variants.map((v) => ({ variant: v, ...tally(requirements.filter((r) => variantsOf(cfg, r).includes(v.id))) })),
     areas: areas.map((a) => ({ area: a.area, ...tally(a.requirements) })),

@@ -63,6 +63,8 @@ export function loadCatalog(cfg) {
     for (const req of area.requirements) {
       req.area = area.area;
       req.sources ??= [];
+      // Level: the requirement's own, else the file's, else the first configured
+      req.level ??= area.level ?? cfg.levels?.[0]?.id;
     }
     return area;
   });
@@ -134,9 +136,12 @@ export function checkCatalog(cfg, sources = loadSources(cfg), catalog = loadCata
   const warnings = [];
   const texts = {};
   const seen = new Set();
+  const levelIds = (cfg.levels ?? []).map((l) => l.id);
   for (const area of areas) {
+    if (area.level !== undefined && !levelIds.includes(area.level)) errors.push(`${area.file}: ${t.checkUnknownLevel(area.level)}`);
     for (const req of area.requirements) {
       const where = `${area.file} ${req.id ?? t.checkNoId}`;
+      if (req.level !== undefined && req.level !== area.level && !levelIds.includes(req.level)) errors.push(`${where}: ${t.checkUnknownLevel(req.level)}`);
       if (area.prefix && !req.id?.startsWith(`${area.prefix}-`)) errors.push(`${where}: ${t.checkPrefix(area.prefix)}`);
       if (seen.has(req.id)) errors.push(`${where}: ${t.checkDuplicate}`);
       seen.add(req.id);

@@ -58,6 +58,11 @@ export const DEFAULTS = {
     // e.g. solved outside the system, or by target, e.g. dropped).
     progress: { done: ['as_target'], partial: ['partial'], exclude: [], excludeTargets: [] },
   },
+  // Requirement levels (optional), e.g. [{ id: 'business', title: 'Business' },
+  // { id: 'ui', title: 'Operating structure' }]. A requirements file names its
+  // level with a top-level `level:`, a requirement may override it; the default
+  // is the first level. Progress is then reported per level as well.
+  levels: [],
   // Domain model (optional, paths.domain): business concepts shared by several
   // variants (customers, installations). Requirements name the variants they
   // apply to and their realisation in the new system.
@@ -97,6 +102,7 @@ export function resolveConfig(root, user = {}) {
   cfg.locale ??= cfg.language === 'de' ? 'de-DE' : 'en-GB';
   cfg.t = merge(dictionary(cfg.language), cfg.labels);
   cfg.path = (key) => path.resolve(cfg.root, cfg.paths[key]);
+  cfg.levels = (cfg.levels ?? []).map((l) => (typeof l === 'string' ? { id: l, title: l } : { title: l.id, ...l }));
   return cfg;
 }
 

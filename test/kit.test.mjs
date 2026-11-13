@@ -255,6 +255,48 @@ test('excluded build values and targets are left out of the share', async () => 
   assert.equal(p.all.share, 1);
 });
 
+test('requirement levels: per file with override, progress per level, FriendlyBase property', async () => {
+  const dir = tmp();
+  fs.cpSync(EXAMPLE, dir, { recursive: true });
+  const file = path.join(dir, 'requirements/02-accounts.yml');
+  fs.writeFileSync(file, `level: ui\n${fs.readFileSync(file, 'utf8')}`);
+  const cfg = await loadConfig(dir);
+  cfg.levels = [{ id: 'business', title: 'Business' }, { id: 'ui', title: 'Operating structure' }];
+  assert.deepEqual(checkCatalog(cfg).errors, []);
+  const model = buildModel(cfg);
+  assert.equal(model.byId['LN-001'].level, 'business'); // default: first level
+  assert.equal(model.byId['AC-001'].level, 'ui'); // from the file
+  const p = model.progress;
+  assert.deepEqual(p.levels.map((l) => l.total), [3, 3]);
+  // per level and variant
+  assert.equal(p.levelRows().length, 4);
+  assert.match(p.levelRows()[0][0], /^Business – /);
+  const out = tmp();
+  buildFriendlyBase(model, out);
+  assert.match(fs.readFileSync(path.join(out, 'requirements/req-ac-001.md'), 'utf8'), /^level: ui$/m);
+  assert.match(fs.readFileSync(path.join(out, 'requirements/_views.yml'), 'utf8'), /group_by: level/);
+  assert.match(fs.readFileSync(path.join(out, 'requirements/_index.md'), 'utf8'), /level:[\s\S]*Operating structure/);
+  assert.match(fs.readFileSync(path.join(out, '_index.md'), 'utf8'), /### By level/);
+  const html = tmp();
+  buildHtml(model, html);
+  assert.match(fs.readFileSync(path.join(html, 'index.html'), 'utf8'), /By level/);
+});
+
+test('without levels nothing changes; unknown levels fail the check', async () => {
+  const model = buildModel(await loadConfig(EXAMPLE));
+  assert.deepEqual(model.progress.levels, []);
+  assert.deepEqual(model.progress.levelRows(), []);
+  const out = tmp();
+  buildFriendlyBase(model, out);
+  assert.doesNotMatch(fs.readFileSync(path.join(out, 'requirements/_views.yml'), 'utf8'), /group_by: level/);
+  const dir = tmp();
+  fs.cpSync(EXAMPLE, dir, { recursive: true });
+  const file = path.join(dir, 'requirements/02-accounts.yml');
+  fs.writeFileSync(file, `level: nonsense\n${fs.readFileSync(file, 'utf8')}`);
+  const { errors } = checkCatalog(await loadConfig(dir));
+  assert.ok(errors.some((e) => /unknown level nonsense/.test(e)), errors.join('\n'));
+});
+
 test('FriendlyBase ids longer than 90 characters are cut with a stable hash', async () => {
   const model = buildModel(await loadConfig(EXAMPLE));
   model.flows[0].id = 'a'.repeat(30) + ' ' + 'b'.repeat(80);

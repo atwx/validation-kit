@@ -1,10 +1,17 @@
 # Changelog
 
+## 0.4.0 – 2026-11-13
+
+- Requirement levels (`levels` in the config, `level:` per requirements file with an override per requirement, default the first level), e.g. business behaviour and operating structure. Without levels nothing changes.
+- Progress per level and variant: `vkit status` ("Glasmacher: Fachlich 100 %, Bedienstruktur 14 %, gesamt 93 %"), HTML report and FriendlyBase overview ("By level").
+- FriendlyBase package: requirement property `level` (`ebene`) and a board "By level".
+- `vkit check` rejects unknown level ids.
 
 ## 0.3.2
 
 - Plain Playwright tests of one spec file form one flow with a step per test, instead of a flow per test. A failed test is a deviation of its step, not an aborted flow.
 - `flowTitles` in the config names these flows by spec file; otherwise the shared describe block or the file name is the title.
+
 ## 0.3.1 – 2026-11-13
 
 - FriendlyBase package: ids longer than 90 characters (long test titles) are cut and get a short hash of the full id (FriendlyBase allows 100)
