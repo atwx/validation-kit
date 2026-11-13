@@ -58,6 +58,8 @@ export function buildHtml(model, outDir = model.cfg.path('html')) {
   const questionLink = (q, depth) => `<a class="req-chip q-chip q-${slug(q.fm[f.state] ?? '')}" href="${depth}behaviour.html#${esc(q.fm.id)}" title="${esc(q.fm.title)}">${esc(q.fm.ref ?? q.fm.id)}</a>`;
   // A plain Playwright test is named after its spec file
   const flowName = (flow) => (flow.plain ? path.basename(flow.file ?? flow.id) : `${t.flow} ${flow.id}`);
+  // Steps of a plain flow are numbered 1, 2 …; their reference names the spec file
+  const stepRef = (flow, step) => (flow.plain ? `${flowName(flow)} ${step.nr}` : step.nr);
 
   const firstSource = Object.values(sources)[0];
   const layout = ({ title, depth, body, active }) => {
@@ -285,7 +287,7 @@ ${deviations.length ? `<table class="list">
     const stepHtml = steps.length ? `<table class="list">
     <thead><tr><th>${esc(t.flowStep)}</th><th>${esc(t.expected)}</th><th>${esc(t.actual)}</th><th>${esc(t.fulfilledShort)}</th></tr></thead>
     <tbody>${steps.map(({ flow, step }) => `<tr>
-      <td><a href="../${flow.page}#step-${slug(step.nr)}">${esc(flow.plain ? flow.id : step.nr)} ${flow.plain ? '' : esc(step.title)}</a></td>
+      <td><a href="../${flow.page}#step-${slug(step.nr)}">${esc(stepRef(flow, step))} ${esc(step.title)}</a></td>
       <td>${esc(step.expected)}</td>
       <td>${esc(step.actual)}</td>
       <td>${step.fulfilled ? `<span class="pill pill-passed">${esc(t.yes)}</span>` : `<span class="pill pill-deviation">${esc(t.no_)}</span> ${esc(step.deviation)}`}</td>
@@ -532,7 +534,7 @@ ${g.concepts.map(conceptHtml).join('\n')}`).join('\n')}
   // ------------------------------------------------------------ traceability matrix
 
   const matrixRules = rules.filter((r) => r.reqs.length);
-  const matrixHead = flows.flatMap((fl) => fl.record.steps.map((s) => `<th class="vert" title="${esc(s.title)}"><a href="${fl.page}#step-${slug(s.nr)}">${esc(fl.plain ? fl.id : s.nr)}</a></th>`)).join('')
+  const matrixHead = flows.flatMap((fl) => fl.record.steps.map((s) => `<th class="vert" title="${esc(s.title)}"><a href="${fl.page}#step-${slug(s.nr)}">${esc(stepRef(fl, s))}</a></th>`)).join('')
     + matrixRules.map((r) => `<th class="vert" title="${esc(r.title)}"><a href="tests/rules.html#${slug(r.nr)}">${esc(r.nr)}</a></th>`).join('');
   const cell = (hit, ok) => (hit ? `<td class="${ok ? 'm-ok' : 'm-bad'}">${ok ? '●' : '✗'}</td>` : '<td></td>');
   const matrixRows = requirements.filter((r) => isCovered(r.id)).map((r) => `<tr><th><a href="requirements/${slug(r.id)}.html">${esc(r.id)}</a></th>${
@@ -548,7 +550,7 @@ ${g.concepts.map(conceptHtml).join('\n')}`).join('\n')}
   const csvRow = (cells) => cells.map((v) => `"${String(v ?? '').replace(/"/g, '""')}"`).join(';');
   const csv = [[...t.csvHead, ...(domain ? [t.domainRefs, t.appliesTo, t.realisationHeader] : [])].join(';'),
     ...requirements.map((r) => csvRow([r.id, r.title, r.area, r.risk, t.status[status(r.id)], r.legacy ? t.legacy[r.legacy.status] : '',
-      coverage[r.id].map(({ flow, step }) => `${flow.plain ? flow.id : step.nr}${step.fulfilled ? '' : ` (${step.deviation})`}`).join(', '),
+      coverage[r.id].map(({ flow, step }) => `${stepRef(flow, step)}${step.fulfilled ? '' : ` (${step.deviation})`}`).join(', '),
       ruleCoverage[r.id].map((rule) => `${rule.nr}${rule.fulfilled ? '' : ` (${rule.deviation})`}`).join(', '),
       entryOf(r.id) ? behaviour.labels[f.target]?.[entryOf(r.id).fm[f.target]] ?? '' : '',
       (behaviour?.questionsOf(r.id) ?? []).map((q) => q.fm.ref ?? q.fm.id).join(', '),

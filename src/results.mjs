@@ -9,13 +9,15 @@ export const FLOW_ATTACHMENTS = ['flow.json', 'xq.json'];
 /**
  * Flow tests of a Playwright JSON report. A test written with flowTest()
  * carries its steps as a `flow.json` attachment. A plain Playwright test
- * counts as a flow with one step when it names requirements, either as
- * annotation { type: 'req', description: 'AB-001, AB-002' } or in its title.
+ * counts as a step when it names requirements, either as annotation
+ * { type: 'req', description: 'AB-001, AB-002' } or in its title; the plain
+ * tests of one spec file form one flow, named after the file.
  */
-export function loadFlows(file, { idPattern } = {}) {
+export function loadFlows(file, { idPattern, titles = {} } = {}) {
   const report = readJson(file, { suites: [] });
   const idRe = idPattern ? new RegExp(`\\b${idPattern}\\b`, 'g') : null;
   const flows = [];
+  const plainByFile = new Map();
   (function walk(suite, titles) {
     for (const spec of suite.specs ?? []) {
       for (const t of spec.tests) {
@@ -28,17 +30,22 @@ export function loadFlows(file, { idPattern } = {}) {
           flows.push({ id: String(record.id), record, status: res.status, startTime: res.startTime, duration: res.duration, file: spec.file });
           continue;
         }
-        const plain = plainFlow(spec, t, res, titles, idRe);
-        if (plain) flows.push(plain);
+        const step = plainStep(spec, t, res, titles, idRe);
+        if (step) {
+          if (!plainByFile.has(spec.file)) plainByFile.set(spec.file, []);
+          plainByFile.get(spec.file).push(step);
+        }
       }
     }
     for (const s of suite.suites ?? []) walk(s, [...titles, s.title]);
   })({ suites: report.suites }, []);
+  for (const [file, steps] of plainByFile) flows.push(plainFlow(file, steps, titles[file]));
   flows.sort((a, b) => naturalCompare(a.id, b.id));
   return flows;
 }
 
-function plainFlow(spec, t, res, titles, idRe) {
+/** A plain test as a step, with the titles of its describe blocks. */
+function plainStep(spec, t, res, titles, idRe) {
   const annotated = (t.annotations ?? []).filter((a) => a.type === 'req').flatMap((a) => String(a.description).split(/[\s,]+/)).filter(Boolean);
   const fromTitle = idRe ? [...spec.title.matchAll(idRe)].map((m) => m[0]) : [];
   const reqs = [...new Set([...annotated, ...fromTitle])];
@@ -48,14 +55,32 @@ function plainFlow(spec, t, res, titles, idRe) {
   // test.fail('…') marks a known defect: the test is expected to fail on this system
   const fail = (t.annotations ?? []).find((a) => a.type === 'fail');
   const known = !passed && !!fail && t.status === 'expected';
-  const id = [...titles.filter(Boolean).slice(1), spec.title].join(' › ');
-  const step = {
-    nr: '1', title: spec.title, procedure: '', expected: spec.title, reqs, actual: passed ? '' : error ?? res.status,
-    fulfilled: res.status === 'passed', knownDefectApplied: known, knownDefect: known ? { system: '', note: fail.description ?? '' } : undefined, checks: [], attachments: [], startedAt: res.startTime, durationMs: res.duration,
-  };
+  // The first title is the spec file, the others are describe blocks
+  const groups = titles.filter(Boolean).slice(1);
   return {
-    id, plain: true, status: passed || known ? 'passed' : res.status, startTime: res.startTime, duration: res.duration, file: spec.file,
-    record: { id, title: spec.title, purpose: '', roles: [], reqs, steps: [step], specFile: spec.file },
+    groups, status: passed || known ? 'passed' : res.status,
+    step: {
+      nr: '', title: [...groups, spec.title].join(' › '), procedure: '', expected: spec.title, reqs, actual: passed ? '' : error ?? res.status,
+      fulfilled: passed, knownDefectApplied: known, knownDefect: known ? { system: '', note: fail.description ?? '' } : undefined, checks: [], attachments: [], startedAt: res.startTime, durationMs: res.duration,
+    },
+  };
+}
+
+/** The plain tests of one spec file as one flow; steps are numbered in order. */
+function plainFlow(file, items, configured) {
+  items.forEach((x, i) => { x.step.nr = String(i + 1); });
+  const steps = items.map((x) => x.step);
+  // Title: the describe block all tests share, else the file name
+  const first = items[0].groups[0];
+  const shared = first && items.every((x) => x.groups[0] === first);
+  const title = configured ?? (shared ? first : file.split('/').pop());
+  if (shared) for (const s of steps) s.title = s.title.slice(first.length + 3);
+  const startTime = steps.map((s) => s.startedAt).filter(Boolean).sort()[0] ?? '';
+  return {
+    // A failed test is a deviation of its step; only a run that did not finish aborts the flow
+    id: file, plain: true, status: items.find((x) => !['passed', 'failed'].includes(x.status))?.status ?? 'passed',
+    startTime, duration: steps.reduce((sum, s) => sum + (s.durationMs ?? 0), 0), file,
+    record: { id: file, title, purpose: '', roles: [], reqs: [...new Set(steps.flatMap((s) => s.reqs))], steps, specFile: file },
   };
 }
 

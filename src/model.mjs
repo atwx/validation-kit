@@ -16,7 +16,7 @@ export function buildModel(cfg) {
   const { requirements, areas, byId } = loadCatalog(cfg);
   const sources = loadSources(cfg);
   const run = readJson(cfg.path('run'), {});
-  const flows = loadFlows(cfg.path('playwright'), { idPattern: cfg.idPattern });
+  const flows = loadFlows(cfg.path('playwright'), { idPattern: cfg.idPattern, titles: cfg.flowTitles });
   const ruleRun = loadRuleTests(cfg.path('rules'));
   const behaviour = loadBehaviour(cfg);
   const domain = loadDomain(cfg);

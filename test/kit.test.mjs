@@ -64,6 +64,30 @@ test('plain test with test.fail() is a known defect, not an aborted flow', async
   assert.equal(model.status('AC-002'), 'deviation');
 });
 
+test('plain tests of one spec file form one flow named after the file', async () => {
+  const dir = tmp();
+  fs.cpSync(EXAMPLE, dir, { recursive: true });
+  const spec = (title, status, req) => ({
+    title, file: 'invoices/invoice.spec.ts',
+    tests: [{ status: 'expected', annotations: [{ type: 'req', description: req }], results: [{ status, startTime: '2026-11-08T10:00:00Z', duration: 5, attachments: [], errors: status === 'failed' ? [{ message: 'expected 1 to be 2' }] : [] }] }],
+  });
+  fs.writeFileSync(path.join(dir, 'test-results/results.json'), JSON.stringify({ suites: [{ title: 'invoices/invoice.spec.ts', specs: [], suites: [
+    { title: 'invoice K-1', specs: [spec('PDF shows the address', 'passed', 'AC-001'), spec('PDF shows the amount', 'failed', 'AC-002')] },
+    { title: 'invoice K-2', specs: [spec('PDF shows the address', 'passed', 'AC-001')] },
+  ] }] }));
+  const model = buildModel(resolveConfig(dir, {}));
+  const plain = model.flows.filter((f) => f.plain);
+  assert.equal(plain.length, 1);
+  assert.equal(plain[0].record.title, 'invoice.spec.ts');
+  assert.deepEqual(plain[0].record.steps.map((s) => `${s.nr} ${s.title}`), ['1 invoice K-1 › PDF shows the address', '2 invoice K-1 › PDF shows the amount', '3 invoice K-2 › PDF shows the address']);
+  // A failed test is a deviation of the flow, not an abort
+  assert.equal(plain[0].status, 'passed');
+  assert.equal(plain[0].deviations.length, 1);
+  const out = tmp();
+  buildFriendlyBase(model, out);
+  assert.equal(fs.readdirSync(path.join(out, 'flows')).filter((f) => f.includes('invoice')).length, 1);
+});
+
 test('attachment paths of another machine are resolved next to the Playwright report', async () => {
   const dir = tmp();
   fs.cpSync(EXAMPLE, dir, { recursive: true });

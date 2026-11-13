@@ -33,7 +33,7 @@ export function buildFriendlyBase(model, outDir = model.cfg.path('friendlybase')
   const reqNode = (id) => cap(`${n.reqPrefix}-${slug(id)}`);
   const flowNode = (fl) => cap(`${n.flowPrefix}-${/^\d+$/.test(fl.id) ? fl.id.padStart(2, '0') : kebab(fl.id)}`);
   const ruleNode = (r) => cap(`${n.rulePrefix}-${kebab(r.id.replace('::', '-'))}`);
-  const devNode = (d) => cap(d.step ? `${n.devPrefix}-${d.flow.plain ? kebab(d.flow.id) : kebab(d.step.nr)}` : `${n.devPrefix}-${kebab(d.rule.id.replace('::', '-'))}`);
+  const devNode = (d) => cap(d.step ? `${n.devPrefix}-${d.flow.plain ? `${kebab(d.flow.id)}-${d.step.nr}` : kebab(d.step.nr)}` : `${n.devPrefix}-${kebab(d.rule.id.replace('::', '-'))}`);
   const qNode = (q) => cap(`${n.proposalPrefix}-${slug(q.fm.ref ?? q.fm.id)}`);
   const sourceNode = (doc) => cap(`${n.sourcePrefix}-${slug(doc.id)}`);
 
@@ -57,6 +57,8 @@ export function buildFriendlyBase(model, outDir = model.cfg.path('friendlybase')
   const quote = (text) => String(text ?? '').split('\n').map((l) => `> ${l}`).join('\n');
   const option = (value, label, color) => ({ value, label, color });
   const flowName = (fl) => (fl.plain ? path.basename(fl.file ?? fl.id) : `${t.flow} ${fl.id}`);
+  // Steps of a plain flow are numbered 1, 2 …; their reference names the spec file
+  const stepRef = (fl, step) => (fl.plain ? `${flowName(fl)} ${step.nr}` : step.nr);
 
   const STATUS_OPTIONS = [option('passed', t.status.passed, 'green'), option('unit', t.status.unit, 'blue'), option('deviation', t.status.deviation, 'red'), option('untested', t.status.untested, 'gray')];
   const LEGACY_OPTIONS = [option('met', t.legacy.met, 'green'), option('partial', t.legacy.partial, 'yellow'), option('not_met', t.legacy.not_met, 'red')];
@@ -193,7 +195,7 @@ ${inv.fm[f.build] ? `\n${t.buildState}: ${behaviour.labels[f.build]?.[inv.fm[f.b
 ${inv.sections[b.sections.assessment] ?? ''}
 ${inv.sections[b.sections.implementation] ? `\n> [!info] ${t.implementation}\n${quote(inv.sections[b.sections.implementation])}\n` : ''}` : '';
 
-    const stepRows = steps.map(({ flow, step }) => [link(flowNode(flow), flow.plain ? flow.id : `${step.nr} ${step.title}`), step.expected, step.actual, step.fulfilled ? t.yes : `${t.no_} (${step.deviation})`]);
+    const stepRows = steps.map(({ flow, step }) => [link(flowNode(flow), `${stepRef(flow, step)} ${step.title}`), step.expected, step.actual, step.fulfilled ? t.yes : `${t.no_} (${step.deviation})`]);
     const ruleRows = ruleList.map((rule) => [link(ruleNode(rule), rule.nr), rule.title, rule.fulfilled ? t.status.passed : `${t.failed} (${rule.deviation})`]);
 
     write(`${n.requirements}/${reqNode(r.id)}.md`, fm, `
@@ -302,7 +304,7 @@ ${t.deviationsIntro(cfg.numbering.flowDeviation, cfg.numbering.ruleDeviation)}
   for (const d of deviations) {
     if (d.step) {
       const { flow, step } = d;
-      const title = `${d.ref} ${flowName(flow)}${flow.plain ? '' : `, ${t.step} ${step.nr}: ${step.title}`}`;
+      const title = `${d.ref} ${flowName(flow)}, ${t.step} ${step.nr}: ${step.title}`;
       write(`${n.deviations}/${devNode(d)}.md`, {
         id: devNode(d), title, ref: d.ref, [n.kindProp]: 'flow', [n.assessmentProp]: step.knownDefectApplied ? 'known' : 'new',
         [n.requirements]: step.reqs.filter((id) => byId[id]).map(reqNode), [n.testProp]: flowNode(flow),
@@ -430,7 +432,7 @@ ${t.traceabilityIntro}
 
 ${table([t.requirement, t.result, t.flowSteps, ...(rules.length ? [t.ruleTests] : [])], requirements.map((r) => [
     reqLink(r.id), t.status[status(r.id)],
-    coverage[r.id].map(({ flow, step }) => `${link(flowNode(flow), flow.plain ? flow.id : step.nr)}${step.fulfilled ? '' : ` (${step.deviation})`}`).join(', '),
+    coverage[r.id].map(({ flow, step }) => `${link(flowNode(flow), stepRef(flow, step))}${step.fulfilled ? '' : ` (${step.deviation})`}`).join(', '),
     ...(rules.length ? [ruleCoverage[r.id].map((rule) => `${link(ruleNode(rule), rule.nr)}${rule.fulfilled ? '' : ` (${rule.deviation})`}`).join(', ')] : []),
   ]))}
 `);

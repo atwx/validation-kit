@@ -71,6 +71,9 @@ export const DEFAULTS = {
     spaceId: undefined, // defaults to slug(title)
     spaceTitle: undefined,
   },
+  // Titles of flows formed from plain Playwright tests, by spec file
+  // (path as in the Playwright report), e.g. { 'invoices/invoice.spec.ts': 'Rechnung als PDF' }
+  flowTitles: {},
   // Free texts for the reports (Markdown in the FriendlyBase package, plain HTML in the report)
   texts: {},
   // Overrides of the built-in labels (see src/i18n.mjs)
