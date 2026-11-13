@@ -6,6 +6,7 @@
 // Entry ids are derived from stable source keys (requirement id, flow id,
 // step number, test class::method), because comments and confirmations in
 // FriendlyBase hang on them.
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import yaml from 'js-yaml';
@@ -26,12 +27,15 @@ export function buildFriendlyBase(model, outDir = model.cfg.path('friendlybase')
 
   // ------------------------------------------------------------ helpers
 
-  const reqNode = (id) => `${n.reqPrefix}-${slug(id)}`;
-  const flowNode = (fl) => `${n.flowPrefix}-${/^\d+$/.test(fl.id) ? fl.id.padStart(2, '0') : kebab(fl.id)}`;
-  const ruleNode = (r) => `${n.rulePrefix}-${kebab(r.id.replace('::', '-'))}`;
-  const devNode = (d) => (d.step ? `${n.devPrefix}-${d.flow.plain ? kebab(d.flow.id) : kebab(d.step.nr)}` : `${n.devPrefix}-${kebab(d.rule.id.replace('::', '-'))}`);
-  const qNode = (q) => `${n.proposalPrefix}-${slug(q.fm.ref ?? q.fm.id)}`;
-  const sourceNode = (doc) => `${n.sourcePrefix}-${slug(doc.id)}`;
+  // FriendlyBase ids have at most 100 characters; longer ones (test titles)
+  // are cut and get a short hash of the full id, so they stay stable and unique
+  const cap = (id) => (id.length <= 90 ? id : `${id.slice(0, 80).replace(/-+$/, '')}-${crypto.createHash('sha1').update(id).digest('hex').slice(0, 8)}`);
+  const reqNode = (id) => cap(`${n.reqPrefix}-${slug(id)}`);
+  const flowNode = (fl) => cap(`${n.flowPrefix}-${/^\d+$/.test(fl.id) ? fl.id.padStart(2, '0') : kebab(fl.id)}`);
+  const ruleNode = (r) => cap(`${n.rulePrefix}-${kebab(r.id.replace('::', '-'))}`);
+  const devNode = (d) => cap(d.step ? `${n.devPrefix}-${d.flow.plain ? kebab(d.flow.id) : kebab(d.step.nr)}` : `${n.devPrefix}-${kebab(d.rule.id.replace('::', '-'))}`);
+  const qNode = (q) => cap(`${n.proposalPrefix}-${slug(q.fm.ref ?? q.fm.id)}`);
+  const sourceNode = (doc) => cap(`${n.sourcePrefix}-${slug(doc.id)}`);
 
   const write = (rel, frontmatter, body) => {
     const file = path.join(outDir, rel);

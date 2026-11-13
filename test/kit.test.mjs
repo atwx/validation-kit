@@ -230,3 +230,14 @@ test('excluded build values and targets are left out of the share', async () => 
   assert.equal(p.all.counted, 5);
   assert.equal(p.all.share, 1);
 });
+
+test('FriendlyBase ids longer than 90 characters are cut with a stable hash', async () => {
+  const model = buildModel(await loadConfig(EXAMPLE));
+  model.flows[0].id = 'a'.repeat(30) + ' ' + 'b'.repeat(80);
+  model.flows[0].plain = true;
+  const out = tmp();
+  buildFriendlyBase(model, out);
+  const ids = fs.readdirSync(path.join(out, 'flows')).filter((f) => f.endsWith('.md'));
+  for (const f of ids) assert.ok(f.length - 3 <= 100, f);
+  assert.ok(ids.some((f) => /^flow-a{30}-b+-[0-9a-f]{8}\.md$/.test(f)));
+});

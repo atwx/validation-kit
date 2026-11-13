@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1 – 2026-11-13
+
+- FriendlyBase package: ids longer than 90 characters (long test titles) are cut and get a short hash of the full id (FriendlyBase allows 100)
+
 ## 0.3.0 – 2026-11-13
 
 - State of the new system: the `build` field of the behaviour inventory is counted per variant and area with the share done (`behaviour.progress`: done, partial, exclude, excludeTargets); HTML overview, `vkit status` and FriendlyBase package (requirement property, board "By state of the new system", counts block and tables on the summary page)
