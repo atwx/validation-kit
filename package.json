@@ -1,6 +1,6 @@
 {
   "name": "@atwx/validation-kit",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "description": "Requirements catalogue, flow and rule tests and a traceable validation report for rebuilding or upgrading a system",
   "license": "BSD-3-Clause",
   "author": "Adiwidjaja Teamworks GmbH",

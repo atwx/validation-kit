@@ -204,3 +204,29 @@ test('code quotes keep angle brackets and markup characters', async () => {
   const { errors } = checkCatalog(await loadConfig(dir));
   assert.deepEqual(errors, []);
 });
+
+test('progress of the new system from the build field, per variant and area', async () => {
+  const model = buildModel(await loadConfig(EXAMPLE));
+  const p = model.progress;
+  assert.equal(p.all.total, 6);
+  assert.equal(p.all.counts.as_target, 5);
+  assert.equal(p.all.counts.open, 1);
+  assert.equal(p.all.done, 5);
+  assert.equal(p.variants.length, 2);
+  assert.equal(p.rows()[0].at(-1), `${Math.round((p.variants[0].done / p.variants[0].counted) * 100)} %`);
+  const out = tmp();
+  buildFriendlyBase(model, out);
+  const req = fs.readFileSync(path.join(out, 'requirements/req-ln-001.md'), 'utf8');
+  assert.match(req, /^build: as_target$/m);
+  const views = fs.readFileSync(path.join(out, 'requirements/_views.yml'), 'utf8');
+  assert.match(views, /group_by: build/);
+  assert.match(fs.readFileSync(path.join(out, '_index.md'), 'utf8'), /\[!counts\|build\]/);
+});
+
+test('excluded build values and targets are left out of the share', async () => {
+  const cfg = await loadConfig(EXAMPLE);
+  cfg.behaviour.progress = { ...cfg.behaviour.progress, exclude: ['open'] };
+  const p = buildModel(cfg).progress;
+  assert.equal(p.all.counted, 5);
+  assert.equal(p.all.share, 1);
+});

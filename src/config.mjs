@@ -53,6 +53,10 @@ export const DEFAULTS = {
     questionTarget: 'question',
     proposalState: 'proposal',
     answeredState: 'answered',
+    // Progress of the new system from the `build` field: values that count as
+    // done or partly done, and entries left out of the share (by build value,
+    // e.g. solved outside the system, or by target, e.g. dropped).
+    progress: { done: ['as_target'], partial: ['partial'], exclude: [], excludeTargets: [] },
   },
   // Domain model (optional, paths.domain): business concepts shared by several
   // variants (customers, installations). Requirements name the variants they

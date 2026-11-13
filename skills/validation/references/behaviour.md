@@ -48,6 +48,25 @@ state: proposal      # open | asked | answered | proposal (fields.state)
 that every requirement has exactly one inventory entry, that references between
 inventory, questions and catalogue exist, and that a `question` target links a question.
 
+## State of the new system (progress)
+
+With a select field `build` in the inventory schema the reports show how far the
+new system is: counts per value for every variant (or all requirements) and per
+area, and the share done. The FriendlyBase package adds the field to every
+requirement, a board "By state of the new system" and a counts block on the
+summary page. Which values count is configured:
+
+```js
+behaviour: {
+  // done: share; partial: shown, not in the share; exclude: left out by build
+  // value (e.g. solved outside the system); excludeTargets: left out by target
+  progress: { done: ['as_target'], partial: ['partial'], exclude: ['external'], excludeTargets: ['drop'] },
+},
+```
+
+If none of the `done` values is an option of the schema (own value names such as
+`wie_ziel`), the reports show the counts without a share until `done` is set.
+
 ## Different field or section names
 
 A German project can name fields and sections differently; map them in

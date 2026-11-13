@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.0 – 2026-11-13
+
+- State of the new system: the `build` field of the behaviour inventory is counted per variant and area with the share done (`behaviour.progress`: done, partial, exclude, excludeTargets); HTML overview, `vkit status` and FriendlyBase package (requirement property, board "By state of the new system", counts block and tables on the summary page)
+- Without a configured done value among the options (own value names) the counts are shown without a share
+
 ## 0.2.3 – 2026-11-08
 
 - Screenshots of flow tests run on another machine or in a container (absolute paths such as `/e2e/test-results/…`) are found next to the Playwright report

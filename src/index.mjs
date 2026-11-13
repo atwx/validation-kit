@@ -7,7 +7,7 @@ export { checkDomain, domainFit, domainVariants, loadDomain, requirementsByConce
 export { bodySections, loadCollection, optionLabels, optionValues, readNode, validateCollection } from './collections.mjs';
 export { loadBehaviour, validateBehaviour } from './behaviour.mjs';
 export { FLOW_ATTACHMENTS, junitToRuleTests, loadFlows, loadRuleTests, writeRuleTests } from './results.mjs';
-export { STATUSES, buildModel } from './model.mjs';
+export { STATUSES, buildModel, buildProgress } from './model.mjs';
 export { buildHtml } from './report/html.mjs';
 export { buildFriendlyBase } from './report/friendlybase.mjs';
 export { esc, kebab, makeDateFormatter, miniMarkdown, naturalCompare, slug } from './util.mjs';

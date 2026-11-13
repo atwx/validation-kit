@@ -2,7 +2,7 @@
 // flow and rule tests, numbered deviations and coverage per requirement.
 // Both report builders (HTML, FriendlyBase) render this model.
 import { codeUrl, loadCatalog, loadSources, quoteLine, sourceText } from './catalog.mjs';
-import { domainFit, loadDomain, requirementsByConcept } from './domain.mjs';
+import { domainFit, domainVariants, loadDomain, requirementsByConcept, variantsOf } from './domain.mjs';
 import { loadBehaviour } from './behaviour.mjs';
 import { loadFlows, loadRuleTests } from './results.mjs';
 import fs from 'node:fs';
@@ -107,10 +107,62 @@ export function buildModel(cfg) {
   const counts = Object.fromEntries(STATUSES.map((s) => [s, 0]));
   for (const r of requirements) counts[status(r.id)]++;
 
+  const progress = buildProgress(cfg, behaviour, requirements, areas);
+
   return {
-    cfg, sources, areas, requirements, byId, run, flows, ruleRun, rules, behaviour,
+    cfg, sources, areas, requirements, byId, run, flows, ruleRun, rules, behaviour, progress,
     domain, fit: domain ? domainFit(cfg, requirements) : [], requirementsByConcept: requirementsByConcept(requirements),
     coverage, ruleCoverage, isCovered, status, deviations, counts,
     flowDeviationCount: flowDeviations, ruleDeviationCount: ruleDeviations,
+  };
+}
+
+/**
+ * State of the new system per requirement from the `build` field of the
+ * behaviour inventory: counts per value, per variant and per area, and the
+ * share done. Null without an inventory or without a select field `build`.
+ * A requirement without an inventory entry counts with the first option.
+ */
+export function buildProgress(cfg, behaviour, requirements, areas) {
+  const field = cfg.behaviour.fields.build;
+  const schema = behaviour?.inventory.schema[field];
+  if (!schema || schema.type !== 'select' || !schema.options?.length) return null;
+  const options = schema.options.map((o) => (typeof o === 'string' ? { value: o, label: o } : { label: o.value, ...o }));
+  const p = { done: [], partial: [], exclude: [], excludeTargets: [], ...cfg.behaviour.progress };
+  const target = cfg.behaviour.fields.target;
+  const value = (r) => behaviour.byRef[r.id]?.fm[field] ?? options[0].value;
+  const labelOf = (v) => options.find((o) => o.value === v)?.label ?? v;
+  const known = (list) => list.filter((v) => options.some((o) => o.value === v));
+  // Without a configured done value among the options there is no share (e.g. own value names)
+  const hasShare = known(p.done).length > 0;
+  const excluded = (r) => p.exclude.includes(value(r)) || p.excludeTargets.includes(behaviour.byRef[r.id]?.fm[target]);
+  const tally = (reqs) => {
+    const counts = Object.fromEntries(options.map((o) => [o.value, 0]));
+    for (const r of reqs) counts[value(r)] = (counts[value(r)] ?? 0) + 1;
+    const counted = reqs.filter((r) => !excluded(r));
+    const done = counted.filter((r) => p.done.includes(value(r))).length;
+    const partial = counted.filter((r) => p.partial.includes(value(r))).length;
+    return {
+      total: reqs.length, counts, counted: counted.length, excluded: reqs.length - counted.length, done, partial,
+      share: hasShare && counted.length ? done / counted.length : null,
+    };
+  };
+  const variants = domainVariants(cfg);
+  const { t } = cfg;
+  const pct = (x) => (x.share === null ? '–' : `${Math.round(x.share * 100)} %`);
+  // Table rows shared by the report builders: per variant (or all), per area
+  const row = (name, x) => [name, x.total, ...options.map((o) => x.counts[o.value] || ''), x.excluded || '', ...(hasShare ? [pct(x)] : [])];
+  const excludedText = [...p.exclude.map(labelOf), ...p.excludeTargets.map((v) => behaviour.labels[target]?.[v] ?? v)].join(', ');
+  return {
+    field, label: schema.label ?? field, options, value, labelOf, hasShare,
+    lead: !hasShare ? '' : t.progressLead(known(p.done).map(labelOf).join(', '), known(p.partial).map(labelOf).join(', '), excludedText),
+    head: (first) => [first, t.requirements, ...options.map((o) => o.label), t.notCounted, ...(hasShare ? [t.progressShare] : [])],
+    rows: () => (variants.length
+      ? variants.map((v) => row(v.title, tally(requirements.filter((r) => variantsOf(cfg, r).includes(v.id)))))
+      : [row(t.progressAll, tally(requirements))]),
+    areaRows: () => areas.map((a) => row(a.area, tally(a.requirements))),
+    all: tally(requirements),
+    variants: variants.map((v) => ({ variant: v, ...tally(requirements.filter((r) => variantsOf(cfg, r).includes(v.id))) })),
+    areas: areas.map((a) => ({ area: a.area, ...tally(a.requirements) })),
   };
 }

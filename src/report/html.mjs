@@ -12,7 +12,7 @@ import { esc, listFiles, makeDateFormatter, miniMarkdown as md, sha256, slug } f
 const STYLE = path.join(path.dirname(fileURLToPath(import.meta.url)), 'style.css');
 
 export function buildHtml(model, outDir = model.cfg.path('html')) {
-  const { cfg, sources, areas, requirements, byId, run, flows, rules, ruleRun, behaviour, coverage, ruleCoverage, isCovered, status, deviations, counts, domain, fit } = model;
+  const { cfg, sources, areas, requirements, byId, run, flows, rules, ruleRun, behaviour, coverage, ruleCoverage, isCovered, status, deviations, counts, domain, fit, progress } = model;
   const { t } = cfg;
   const fmtDate = makeDateFormatter(cfg.locale, cfg.timeZone);
   const texts = cfg.texts;
@@ -151,6 +151,18 @@ ${body}
   <tbody>${fit.map((x) => `<tr><td>${esc(x.variant.title)}</td><td class="num">${x.total}</td>${realisations.map((r) => `<td class="num">${x.by[r] || ''}</td>`).join('')}<td class="num">${x.open || ''}</td><td class="num"><strong>${x.share === null ? '–' : `${Math.round(x.share * 100)} %`}</strong></td></tr>`).join('')}</tbody>
 </table>` : '';
 
+  // State of the new system (build field of the behaviour inventory)
+  const progressTable = (head, rows) => `<table class="list">
+  <thead><tr>${head.map((h, i) => `<th${i ? ' class="num"' : ''}>${esc(h)}</th>`).join('')}</tr></thead>
+  <tbody>${rows.map((r) => `<tr>${r.map((c, i) => (progress.hasShare && i === r.length - 1 ? `<td class="num"><strong>${esc(c)}</strong></td>` : `<td${i ? ' class="num"' : ''}>${esc(c)}</td>`)).join('')}</tr>`).join('')}</tbody>
+</table>`;
+  const progressSection = progress ? `<h2>${esc(t.buildState)}</h2>
+<p>${esc(progress.lead)}</p>
+${progressTable(progress.head(fit.length ? t.variant : ''), progress.rows())}
+<details><summary>${esc(t.areas)}</summary>
+${progressTable(progress.head(t.area), progress.areaRows())}
+</details>` : '';
+
   write('index.html', layout({
     title: t.navOverview, depth: '', active: 'index', body: `
 <h1>${esc(cfg.title)}</h1>
@@ -168,6 +180,7 @@ ${texts.intro ? `<div class="intro">${texts.intro}</div>` : ''}
 </section>
 
 ${fitTable}
+${progressSection}
 
 <h2>${esc(t.systemState)}</h2>
 <table class="kv">

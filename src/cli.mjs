@@ -66,6 +66,11 @@ export async function main(argv) {
       const { t } = model.cfg;
       for (const [s, n] of Object.entries(model.counts)) console.log(`${String(n).padStart(4)}  ${t.status[s]}`);
       console.log(`${String(model.deviations.length).padStart(4)}  ${t.deviations}`);
+      if (model.progress) {
+        const { hasShare } = model.progress;
+        console.log(`\n${t.buildState}${hasShare ? ` (${model.progress.lead})` : ''}`);
+        for (const r of model.progress.rows()) console.log(`  ${r[0] || t.progressAll}: ${hasShare ? `${r.at(-1)}, ` : ''}${model.progress.options.map((o, i) => (r[i + 2] ? `${r[i + 2]} ${o.label}` : '')).filter(Boolean).join(', ')}`);
+      }
       return 0;
     }
     case 'junit': {
